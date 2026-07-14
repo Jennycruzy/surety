@@ -1,0 +1,21 @@
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+.secrets/
+
+# JavaScript
+node_modules/
+.next/
+dist/
+coverage/
+
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+
+# Runtime scratch files
+*.log
+*.pid
+data/recordings/*.partial

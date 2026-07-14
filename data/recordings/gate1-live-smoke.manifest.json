@@ -1,0 +1,20 @@
+{
+  "format": "surety.txline.raw-sse.v1",
+  "source": "TxLINE authenticated SSE response bytes",
+  "files": [
+    {
+      "channel": "odds",
+      "path": "data/recordings/gate1-live-smoke-odds.raw.sse",
+      "bytes": 34225,
+      "frames": 87,
+      "sha256": "36651c5493a87314d9377f86ccdbde1fe3041460488df35bf757881c30d948ba"
+    },
+    {
+      "channel": "scores",
+      "path": "data/recordings/gate1-live-smoke-scores.raw.sse",
+      "bytes": 2198,
+      "frames": 2,
+      "sha256": "e0bd8692090dbd35dddfa24c3dde180380a9c888abfd0a5dd60d4d859d44eba1"
+    }
+  ]
+}

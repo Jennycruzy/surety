@@ -1,0 +1,261 @@
+data: {"FixtureId":18237038,"MessageId":"1837783987:00003:000132-10021-stab","Ts":1784057282020,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2122,1891],"Pct":["47.125","52.882"]}
+id: 1784057100000:26364
+
+data: {"FixtureId":18237038,"MessageId":"1837783987:00003:000133-10021-stab","Ts":1784057282020,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[8888,1127],"Pct":["11.251","88.731"]}
+id: 1784057100000:26365
+
+data: {"FixtureId":18237038,"MessageId":"1837783987:00003:000130-10021-stab","Ts":1784057282020,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[21100,4644,1357],"Pct":["4.739","21.533","73.692"]}
+id: 1784057100000:26378
+
+data: {"FixtureId":18237038,"MessageId":"1837783987:00003:000126-10021-stab","Ts":1784057282020,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=4.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[6108,1196],"Pct":["16.372","83.612"]}
+id: 1784057100000:26397
+
+data: {"FixtureId":18237038,"MessageId":"1837783987:00003:000127-10021-stab","Ts":1784057282020,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1526,2902],"Pct":["65.531","34.459"]}
+id: 1784057100000:26398
+
+data: {"FixtureId":18237038,"MessageId":"1837783987:00003:000128-10021-stab","Ts":1784057282020,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[2668,1599],"Pct":["37.481","62.539"]}
+id: 1784057100000:26399
+
+data: {"FixtureId":18237038,"MessageId":"1837783993:00003:000474-10021-stab","Ts":1784057285286,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2125,1889],"Pct":["47.059","52.938"]}
+id: 1784057100000:26783
+
+data: {"FixtureId":18237038,"MessageId":"1837783993:00003:000475-10021-stab","Ts":1784057285286,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[4877,1258],"Pct":["20.504","79.491"]}
+id: 1784057100000:26784
+
+data: {"FixtureId":18237038,"MessageId":"1837783993:00003:001082-10021-stab","Ts":1784057285440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":null,"PriceNames":["part1","draw","part2"],"Prices":[4929,3598,1926],"Pct":["20.288","27.793","51.921"]}
+id: 1784057100000:26881
+
+data: {"FixtureId":18237038,"MessageId":"1837783993:00003:001083-10021-stab","Ts":1784057285440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[21000,4628,1358],"Pct":["4.762","21.608","73.638"]}
+id: 1784057100000:26882
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000209-10021-stab","Ts":1784057286433,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2127,1887],"Pct":["47.015","52.994"]}
+id: 1784057100000:26965
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000210-10021-stab","Ts":1784057286434,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.75","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2789,1559],"Pct":["NA","NA"]}
+id: 1784057100000:26966
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000215-10021-stab","Ts":1784057286434,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[1603,2657],"Pct":["62.383","37.636"]}
+id: 1784057100000:26975
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000216-10021-stab","Ts":1784057286434,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[2676,1597],"Pct":["NA","NA"]}
+id: 1784057100000:26976
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000221-10021-stab","Ts":1784057286435,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":null,"PriceNames":["part1","draw","part2"],"Prices":[4931,3598,1926],"Pct":["20.280","27.793","51.921"]}
+id: 1784057100000:26988
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000222-10021-stab","Ts":1784057286435,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[21000,4631,1358],"Pct":["4.762","21.594","73.638"]}
+id: 1784057100000:26992
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000240-10021-stab","Ts":1784057286444,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[4244,1308],"Pct":["NA","NA"]}
+id: 1784057100000:27031
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000241-10021-stab","Ts":1784057286444,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[3499,1400],"Pct":["28.580","71.429"]}
+id: 1784057100000:27032
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000242-10021-stab","Ts":1784057286444,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.75","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2519,1658],"Pct":["NA","NA"]}
+id: 1784057100000:27033
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000243-10021-stab","Ts":1784057286444,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1792,2262],"Pct":["NA","NA"]}
+id: 1784057100000:27034
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000283-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.75","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1671,2489],"Pct":["NA","NA"]}
+id: 1784057100000:27072
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000282-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1527,2897],"Pct":["65.488","34.518"]}
+id: 1784057100000:27073
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000286-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[2658,1603],"Pct":["37.622","62.383"]}
+id: 1784057100000:27074
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000281-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.25","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1314,4190],"Pct":["NA","NA"]}
+id: 1784057100000:27075
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000287-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.75","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[3260,1442],"Pct":["NA","NA"]}
+id: 1784057100000:27076
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000284-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1924,2082],"Pct":["51.975","48.031"]}
+id: 1784057100000:27077
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000285-10021-stab","Ts":1784057286445,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.25","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[2311,1763],"Pct":["NA","NA"]}
+id: 1784057100000:27078
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000334-10021-stab","Ts":1784057286456,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.5","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2093,1915],"Pct":["47.778","52.219"]}
+id: 1784057100000:27101
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000336-10021-stab","Ts":1784057286456,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1487,3053],"Pct":["67.249","32.755"]}
+id: 1784057100000:27102
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000528-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.75","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1673,2486],"Pct":["NA","NA"]}
+id: 1784057100000:27113
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000527-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1528,2892],"Pct":["65.445","34.578"]}
+id: 1784057100000:27114
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000531-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[2662,1602],"Pct":["37.566","62.422"]}
+id: 1784057100000:27115
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000526-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2.25","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1316,4162],"Pct":["NA","NA"]}
+id: 1784057100000:27116
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000532-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.75","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[3273,1440],"Pct":["NA","NA"]}
+id: 1784057100000:27117
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000529-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1927,2079],"Pct":["51.894","48.100"]}
+id: 1784057100000:27118
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000530-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3.25","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[2317,1759],"Pct":["NA","NA"]}
+id: 1784057100000:27119
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000522-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[4248,1308],"Pct":["NA","NA"]}
+id: 1784057100000:27132
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000523-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[3505,1399],"Pct":["28.531","71.480"]}
+id: 1784057100000:27133
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000524-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.75","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2520,1658],"Pct":["NA","NA"]}
+id: 1784057100000:27134
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000525-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1793,2261],"Pct":["NA","NA"]}
+id: 1784057100000:27135
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000516-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":null,"PriceNames":["part1","draw","part2"],"Prices":[4933,3598,1926],"Pct":["20.272","27.793","51.921"]}
+id: 1784057100000:27137
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000520-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2129,1886],"Pct":["46.970","53.022"]}
+id: 1784057100000:27156
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000521-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.75","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2797,1557],"Pct":["NA","NA"]}
+id: 1784057100000:27157
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000517-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[21000,4634,1357],"Pct":["4.762","21.580","73.692"]}
+id: 1784057100000:27173
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000518-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[1599,2669],"Pct":["62.539","37.467"]}
+id: 1784057100000:27183
+
+data: {"FixtureId":18237038,"MessageId":"1837783995:00003:000519-10021-stab","Ts":1784057286460,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[2671,1598],"Pct":["NA","NA"]}
+id: 1784057100000:27184
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:000668-10021-stab","Ts":1784057287271,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[20600,4667,1356],"Pct":["4.854","21.427","73.746"]}
+id: 1784057100000:27204
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001033-10021-stab","Ts":1784057287433,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[20600,4664,1357],"Pct":["4.854","21.441","73.692"]}
+id: 1784057100000:27209
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001036-10021-stab","Ts":1784057287434,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2131,1885],"Pct":["46.926","53.050"]}
+id: 1784057100000:27213
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001037-10021-stab","Ts":1784057287434,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.75","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2801,1555],"Pct":["NA","NA"]}
+id: 1784057100000:27214
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001038-10021-stab","Ts":1784057287435,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[1600,2668],"Pct":["62.500","37.481"]}
+id: 1784057100000:27220
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001039-10021-stab","Ts":1784057287435,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[2675,1597],"Pct":["NA","NA"]}
+id: 1784057100000:27221
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001044-10021-stab","Ts":1784057287441,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[1600,2666],"Pct":["62.500","37.509"]}
+id: 1784057100000:27223
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001045-10021-stab","Ts":1784057287441,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[2678,1596],"Pct":["NA","NA"]}
+id: 1784057100000:27224
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001043-10021-stab","Ts":1784057287441,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[20600,4661,1357],"Pct":["4.854","21.455","73.692"]}
+id: 1784057100000:27234
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001046-10021-stab","Ts":1784057287441,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2132,1883],"Pct":["46.904","53.107"]}
+id: 1784057100000:27246
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001047-10021-stab","Ts":1784057287441,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.75","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2806,1554],"Pct":["NA","NA"]}
+id: 1784057100000:27247
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001105-10021-stab","Ts":1784057287454,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[2683,1594],"Pct":["NA","NA"]}
+id: 1784057100000:27267
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001106-10021-stab","Ts":1784057287454,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":"half=1","PriceNames":["part1","part2"],"Prices":[1597,2675],"Pct":["62.617","37.383"]}
+id: 1784057100000:27268
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001107-10021-stab","Ts":1784057287454,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2134,1882],"Pct":["46.860","53.135"]}
+id: 1784057100000:27269
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001108-10021-stab","Ts":1784057287454,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.75","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2818,1550],"Pct":["NA","NA"]}
+id: 1784057100000:27270
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001109-10021-stab","Ts":1784057287454,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[4916,1255],"Pct":["20.342","79.681"]}
+id: 1784057100000:27271
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001321-10021-stab","Ts":1784057287497,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[4955,1253],"Pct":["20.182","79.808"]}
+id: 1784057100000:27321
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001320-10021-stab","Ts":1784057287497,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"1X2_PARTICIPANT_RESULT","GameState":null,"InRunning":true,"MarketParameters":null,"MarketPeriod":"half=1","PriceNames":["part1","draw","part2"],"Prices":[20700,4676,1355],"Pct":["4.831","21.386","73.801"]}
+id: 1784057100000:27344
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001314-10021-stab","Ts":1784057287497,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1115,9721],"Pct":["89.686","10.287"]}
+id: 1784057100000:27382
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001315-10021-stab","Ts":1784057287497,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=3","MarketPeriod":null,"PriceNames":["over","under"],"Prices":[1930,2075],"Pct":["51.813","48.193"]}
+id: 1784057100000:27383
+
+data: {"FixtureId":18237038,"MessageId":"1837783996:00003:001397-10021-stab","Ts":1784057287509,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2135,1881],"Pct":["46.838","53.163"]}
+id: 1784057100000:27384
+
+data: {"FixtureId":18237038,"MessageId":"1837784001:00003:000065-10021-stab","Ts":1784057289448,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2137,1879],"Pct":["46.795","53.220"]}
+id: 1784057100000:27512
+
+data: {"FixtureId":18237038,"MessageId":"1837784001:00003:000066-10021-stab","Ts":1784057289448,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.75","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2828,1547],"Pct":["NA","NA"]}
+id: 1784057100000:27513
+
+data: {"FixtureId":18237038,"MessageId":"1837784003:00003:001575-10021-stab","Ts":1784057290946,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2142,1875],"Pct":["46.685","53.333"]}
+id: 1784057100000:27716
+
+data: {"FixtureId":18237038,"MessageId":"1837784003:00003:001576-10021-stab","Ts":1784057290946,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[4995,1250],"Pct":["20.020","80.000"]}
+id: 1784057100000:27717
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000493-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1364,3749],"Pct":["NA","NA"]}
+id: 1784057100000:27835
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000495-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[3487,1402],"Pct":["28.678","71.327"]}
+id: 1784057100000:27836
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000494-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[4221,1310],"Pct":["NA","NA"]}
+id: 1784057100000:27837
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000497-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.5","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2089,1918],"Pct":["47.870","52.138"]}
+id: 1784057100000:27838
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000492-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1485,3062],"Pct":["67.340","32.658"]}
+id: 1784057100000:27839
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000498-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1791,2265],"Pct":["NA","NA"]}
+id: 1784057100000:27840
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000496-10021-stab","Ts":1784057291440,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.75","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2514,1660],"Pct":["NA","NA"]}
+id: 1784057100000:27841
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000573-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1361,3770],"Pct":["NA","NA"]}
+id: 1784057100000:27867
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000575-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[3469,1405],"Pct":["28.827","71.174"]}
+id: 1784057100000:27868
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000574-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-1.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[4194,1313],"Pct":["NA","NA"]}
+id: 1784057100000:27869
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000577-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.5","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2085,1921],"Pct":["47.962","52.056"]}
+id: 1784057100000:27870
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000572-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=0","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1483,3071],"Pct":["67.431","32.563"]}
+id: 1784057100000:27871
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000578-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.25","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[1788,2269],"Pct":["NA","NA"]}
+id: 1784057100000:27872
+
+data: {"FixtureId":18237038,"MessageId":"1837784004:00003:000576-10021-stab","Ts":1784057291453,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"ASIANHANDICAP_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=-0.75","MarketPeriod":null,"PriceNames":["part1","part2"],"Prices":[2509,1663],"Pct":["NA","NA"]}
+id: 1784057100000:27873
+
+data: {"FixtureId":18237038,"MessageId":"1837784008:00003:000685-10021-stab","Ts":1784057293517,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=1.5","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[2144,1874],"Pct":["46.642","53.362"]}
+id: 1784057100000:28052
+
+data: {"FixtureId":18237038,"MessageId":"1837784008:00003:000686-10021-stab","Ts":1784057293517,"Bookmaker":"TXLineStablePriceDemargined","BookmakerId":10021,"SuperOddsType":"OVERUNDER_PARTICIPANT_GOALS","GameState":null,"InRunning":true,"MarketParameters":"line=2","MarketPeriod":"half=1","PriceNames":["over","under"],"Prices":[5036,1248],"Pct":["19.857","80.128"]}
+id: 1784057100000:28053
+
