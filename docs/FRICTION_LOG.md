@@ -71,3 +71,16 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   retains signatures itself and backs off on HTTP 429 account/status reads.
 - **Status:** Resolved. This is Solana public-devnet infrastructure friction, not a
   TxLINE API defect.
+
+## 2026-07-15 — V2 settlement proof approaches Solana's transaction ceiling
+
+- **Observed:** The complete SURETY settlement transaction for a two-stat final
+  outcome proof serialized to 1,185 bytes. Solana's transaction limit leaves only a
+  small margin for additional accounts or proof nodes.
+- **Impact:** V2 is sufficient for the binary World Cup outcome gate, but larger
+  compound predicates may not fit even though TxLINE accepts them computationally.
+- **Workaround:** SURETY requests and submits only the leaves required by the exact
+  policy predicate and reconstructs the V2 strategy on-chain. It does not attach
+  unused stats from the proof response.
+- **Status:** Gate 4 passed with V2. The documented V3 multiproof is the planned path
+  for larger compound settlements; it must be independently verified before use.

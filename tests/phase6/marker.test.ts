@@ -1,11 +1,32 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildChain, verifyChain } from "../../services/marker/src/marker.js";
+import { buildChain, verifyChain, type MarkerInput } from "../../services/marker/src/marker.js";
 
-test("glass balance sheet chain is deterministic and tamper evident", () => {
-  const policies = [{ id: "p1", coverage: 100, bucket: "winner" }, { id: "p2", coverage: 50, bucket: "winner" }];
-  const updates = [{ packetRef: "pkt-1", probability: 0.4, ts: 1 }, { packetRef: "pkt-2", probability: 0.7, ts: 2 }];
-  const a = buildChain(policies, updates, 1_000); const b = buildChain(policies, updates, 1_000);
-  assert.deepEqual(a, b); assert.equal(verifyChain(a), true);
-  a[1]!.markedLiabilities += 1; assert.equal(verifyChain(a), false);
+const input: MarkerInput = {
+  vault: "vault-1",
+  reserves: "1000000000",
+  lockedCollateral: "150000000",
+  policies: [
+    { id: "p1", coverage: "100000000", bucket: "winner" },
+    { id: "p2", coverage: "50000000", bucket: "winner" },
+  ],
+  updates: [
+    { packetRef: "pkt-1", packetHash: "11".repeat(32), probabilityPpmByBucket: { winner: 400000 }, timestampMs: "1" },
+    { packetRef: "pkt-2", packetHash: "22".repeat(32), probabilityPpmByBucket: { winner: 700000 }, timestampMs: "2" },
+  ],
+};
+
+test("glass balance sheet chain is fixed-point, deterministic, and tamper evident", () => {
+  const first = buildChain(input);
+  const second = buildChain(input);
+  assert.deepEqual(first, second);
+  assert.equal(first[0]!.markedLiabilities, "60000000");
+  assert.equal(first[1]!.markedLiabilities, "105000000");
+  assert.equal(verifyChain(first), true);
+  first[1]!.markedLiabilities = "105000001";
+  assert.equal(verifyChain(first), false);
+});
+
+test("policy ordering cannot change the book hash or chain", () => {
+  assert.deepEqual(buildChain(input), buildChain({ ...input, policies: [...input.policies].reverse() }));
 });

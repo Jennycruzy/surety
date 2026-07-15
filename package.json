@@ -7,21 +7,35 @@
     "node": ">=20"
   },
   "scripts": {
+    "dev": "next dev",
+    "build:web": "next build",
+    "start": "next start",
     "record": "node --import tsx services/feed-ingest/src/cli.ts",
     "replay": "node --import tsx services/replay/src/cli.ts",
     "test": "node scripts/test-suite.mjs",
     "predicate": "node --import tsx services/predicate/src/cli.ts",
+    "audit-quote": "node --import tsx services/quote-engine/src/cli.ts",
     "marker": "node --import tsx services/marker/src/cli.ts",
-    "test:phase1": "tsx --test tests/phase1/*.test.ts",
-    "test:phase3": "tsx --test --test-concurrency=1 tests/phase3/*.test.ts",
-    "test:phase6": "node --import tsx --test tests/phase6/*.test.ts"
+    "test:phase1": "node --import tsx --test tests/phase1/*.test.ts",
+    "test:phase3": "node --import tsx --test --test-concurrency=1 tests/phase3/*.test.ts",
+    "test:phase4": "node --import tsx --test --test-concurrency=1 tests/phase4/*.test.ts",
+    "test:phase5": "node --import tsx --test tests/phase5/quote-engine.test.ts",
+    "test:phase5:devnet": "node --import tsx --test --test-concurrency=1 tests/phase5/quote-audit-devnet.test.ts",
+    "test:phase6": "node --import tsx --test tests/phase6/marker.test.ts",
+    "test:phase6:devnet": "node --import tsx --test --test-concurrency=1 tests/phase6/attestation-devnet.test.ts"
   },
   "devDependencies": {
     "@anchor-lang/core": "^1.0.2",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "@types/node": "^24.0.0",
+    "@types/react": "19.2.17",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "next": "^16.2.10",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

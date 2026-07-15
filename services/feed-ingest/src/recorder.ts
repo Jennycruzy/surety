@@ -48,7 +48,10 @@ export async function recordStream(options: RecordOptions): Promise<RecordingRes
       throw new Error(`${options.channel} stream failed: HTTP ${response.status}`);
     }
 
-    for await (const chunk of response.body) {
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value: chunk } = await reader.read();
+      if (done) break;
       const raw = Buffer.from(chunk);
       if (!writer.write(raw)) await new Promise<void>((resolve) => writer.once("drain", resolve));
       hash.update(raw);

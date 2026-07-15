@@ -115,6 +115,122 @@ Issuance physically locks the promised payout in a policy PDA. Concentrated expo
 was rejected atomically, and escrow was released only after expiry. The evidence mint
 is a six-decimal devnet test token, not Circle USDC, and has no monetary value.
 
+## Gate 4 — Atomic settlement through TxLINE validation CPI
+
+**Status: PASS**
+
+Program: [`3e5r…8qVW`](https://explorer.solana.com/address/3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW?cluster=devnet)
+
+- PASS — The settlement-enabled SBF was deployed in
+  [transaction `3T3R…W1Ns`](https://explorer.solana.com/tx/3T3RmyAWE9zFcr7oibAxabHySPMdSoR44wTxKgTSck6JTbNNCnTPe66F2PuA6zzyMUSXnyLoha456L2oYHy2W1Ns?cluster=devnet).
+- PASS — A permissionless caller submitted the authentic TxLINE V2 proof for the
+  final Spain–Belgium record. The SURETY instruction reconstructed the validator
+  predicate from the policy bytes, CPI-called TxLINE program `6pW6…wyP2`, required
+  its boolean `true` return, and paid the full 100 test USDC to the policy payout
+  account in the same transaction:
+  [settlement `4e7n…PMQzX`](https://explorer.solana.com/tx/4e7nfJWfAuuxaa58k7Ta8LXM8BJJ4tMX16yCXE4pRMNUxA8P1ZyvgowDecnoe3kjhtSjn31Z4jz8XwUFwRbPMQzX?cluster=devnet).
+- PASS — The exact same settlement was first submitted after changing
+  `mainTreeProof[0].hash[0]` with XOR `0x01`. TxLINE rejected it and the complete
+  transaction failed:
+  [tampered transaction `39Ly…NShB`](https://explorer.solana.com/tx/39Ly98r1SwDk4EbLiW1woStmdNeBS4agzFQDcNfVmr5KifegDvcurEACTUyDgDABu4uDtKFNMSc4kr7hz8FKNShB?cluster=devnet).
+  The test then fetched the policy and token account and confirmed the policy was
+  still open and all 100 test USDC remained in escrow.
+- PASS — Caller `2CgbFVv8AY4LTJeRFRopX9gKv63KHA5q8hD13aZ3k2GZ` was generated for this
+  test and is neither the deployer nor policyholder. There is no admin settlement
+  instruction.
+- PASS — Policy account
+  [`2s1w…jZdmL`](https://explorer.solana.com/address/2s1wFgQZ4JKfXMBtAP85XQSPujRfXfkf2CnUzp3jZdmL?cluster=devnet)
+  ended `Triggered`, its escrow ended at zero, its payout account received exactly
+  100 test USDC, and its on-chain Merkle receipt hash is nonzero.
+
+Reproduction command:
+
+```text
+ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
+ANCHOR_WALLET=.secrets/devnet-deployer.json \
+npm run test:phase4
+```
+
+The two settlement transactions were each 1,185 serialized bytes, below Solana's
+transaction limit. The test printed 1 pass, 0 failures.
+
+Plain-English result: no SURETY keeper or administrator asserted the result. TxLINE's
+deployed validator accepted the authentic Merkle path and rejected a one-bit change.
+Payout and proof verification are atomic, so there is no path where a failed proof
+can release escrow.
+
+## Gate 5 — Deterministic quote engine and verdict gate
+
+**Status: PASS**
+
+- PASS — The quote engine uses the authentic full-match TxLINE StablePrice packet
+  `1837782566:00003:000791-10021-stab` from the recorded France–Spain snapshot. It
+  removes overround by normalizing reciprocal decimal prices with integer arithmetic;
+  prices `[2784, 2968, 3291]` produce probabilities
+  `[359202, 336933, 303865]` ppm, which sum to exactly 1,000,000.
+- PASS — Ten policies were quoted sequentially from the live on-chain vault and
+  bucket state, issued on devnet, fetched back, and independently audited. Every
+  recomputed hash matched its Policy account. The complete reproducible inputs are
+  in `data/quotes/gate5-quotes.jsonl`; `npm run audit-quote -- --log
+  data/quotes/gate5-quotes.jsonl --rpc https://api.devnet.solana.com` printed ten
+  per-policy PASS lines and `PASS: audited 10 quote commitments`.
+- PASS — The audit set's vault is
+  [`CDyQ…ZkqEC`](https://explorer.solana.com/address/CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC?cluster=devnet).
+  Example accepted policy
+  [`3DNb…LHsn`](https://explorer.solana.com/address/3DNbBFvs3NT6LCKvLgWmk8eA9AExCUJUV7xVRbhaLHsn?cluster=devnet)
+  committed quote `3a2b…aeae`; example surcharged policy
+  [`6yqK…6STp`](https://explorer.solana.com/address/6yqKpAB449yWAP4e3i7hhuaxt3gEbo8sBJCjcHbJ6STp?cluster=devnet)
+  committed quote `96a1…dc2d`.
+- PASS — `data/verdicts/gate5-verdicts.jsonl` contains all inputs and results for
+  ACCEPT, SURCHARGE, and REJECT. The surcharge case projected 45.20% utilization and
+  applied 10,866 bps. The reject vector projected exactly 100.00% utilization and
+  returned no premium.
+- PASS — Local tests prove packet/book/coverage mutations change the commitment,
+  accounting-invalid books are refused, and repeat computation is byte-stable.
+
+Plain-English result: the premium is not a hardcoded UI number. It is a pure,
+fixed-point function of one recorded real TxLINE packet and the vault state that
+existed immediately before issuance. Anyone can recompute the result and compare it
+to the immutable hash in the policy account.
+
+## Gate 6 — Glass Balance Sheet
+
+**Status: PARTIAL — protocol gate passes; required dashboard recording is pending**
+
+- PASS — The attestation-enabled SBF (`afd0962c…ef95cd`) was upgraded in
+  [transaction `5Qhh…zGc1P`](https://explorer.solana.com/tx/5QhhECbakWakK2BwSstVTcy7oSDqvzeFtdoBhgbHo9GyjN3i5om2dyc9z26pAS6PVsEcJwSz5pr3f8uaxqJzGc1P?cluster=devnet).
+- PASS — Ten hash-chained solvency attestations were posted for ten open policies in
+  vault
+  [`CDyQ…ZkqEC`](https://explorer.solana.com/address/CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC?cluster=devnet).
+  Every record commits the prior hash, raw odds-packet hash, complete book-snapshot
+  hash, reserves, locked collateral, marked liabilities, ratio, and packet time.
+- PASS — Records 6–10 use the full 7.5 MB authentic odds capture around the recorded
+  France–Spain goal at score timestamp `1784060376027`; no packet or probability was
+  synthesized. Marked liabilities moved from `125,692,760` to `133,889,200` minor
+  units across the goal window, and the solvency ratio moved from 95,742 to 89,881
+  bps.
+- PASS — `npm run marker -- --verify-chain data/attestations-gate6.jsonl --rpc
+  https://api.devnet.solana.com` recomputed the full chain and printed an on-chain
+  match for all ten records. Example goal-window accounts:
+  [record 7](https://explorer.solana.com/address/BkfPVQuL5VXu3wEV2cyAScyNBRKZNnpxBcYRueMqA8Ba?cluster=devnet),
+  [record 8](https://explorer.solana.com/address/JAYa91gEFYAQ3TnDUmNLeHPosMDr7gjpNjct4ypBnDcN?cluster=devnet), and
+  [record 10](https://explorer.solana.com/address/7PUzobdns5uTUQppFZKWPXSxxzA7yvTRm1dCPNC8pPKT?cluster=devnet).
+- PASS — Rebuilding each five-record segment twice from the same packet bytes and
+  clean state produced byte-identical chains. Local tests also prove policy ordering
+  cannot change the book hash and a one-unit liability mutation breaks verification.
+- PASS — The Next.js Glass Balance Sheet dashboard builds as a static production
+  route (`npm run build:web`) and returned HTTP 200 locally. Its timed replay uses
+  records 6–10 directly, surfaces the goal between records 7 and 8, animates the
+  ratio/liability/bucket changes, and links every displayed attestation to Explorer.
+- PENDING — the required 30-second dashboard recording showing the goal, re-mark,
+  ratio movement, and new chain link. Gate 6 is intentionally not marked complete
+  without it.
+
+Plain-English result: the balance sheet is no longer an off-chain dashboard claim.
+Its figures are fixed-point, its history is tamper-evident, and each compact record
+exists in a dedicated devnet account. The missing item is presentation evidence, not
+the protocol chain.
+
 ## COMPLIANCE
 
 Pending Gate 8.
