@@ -1,0 +1,26 @@
+[toolchain]
+anchor_version = "1.0.2"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+surety_core = "3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW"
+
+[programs.devnet]
+surety_core = "3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW"
+
+[provider]
+cluster = "devnet"
+wallet = ".secrets/devnet-deployer.json"
+
+[workspace]
+members = ["programs/surety_core"]
+
+[scripts]
+test = "npm run test:phase3"
+
+[test.validator]
+rpc_port = 18899
+faucet_port = 19900

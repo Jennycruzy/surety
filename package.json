@@ -7,13 +7,19 @@
     "node": ">=20"
   },
   "scripts": {
-    "record": "tsx services/feed-ingest/src/cli.ts",
-    "replay": "tsx services/replay/src/cli.ts",
+    "record": "node --import tsx services/feed-ingest/src/cli.ts",
+    "replay": "node --import tsx services/replay/src/cli.ts",
     "test": "node scripts/test-suite.mjs",
-    "predicate": "tsx services/predicate/src/cli.ts",
-    "test:phase1": "tsx --test tests/phase1/*.test.ts"
+    "predicate": "node --import tsx services/predicate/src/cli.ts",
+    "marker": "node --import tsx services/marker/src/cli.ts",
+    "test:phase1": "tsx --test tests/phase1/*.test.ts",
+    "test:phase3": "tsx --test --test-concurrency=1 tests/phase3/*.test.ts",
+    "test:phase6": "node --import tsx --test tests/phase6/*.test.ts"
   },
   "devDependencies": {
+    "@anchor-lang/core": "^1.0.2",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
     "@types/node": "^24.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"

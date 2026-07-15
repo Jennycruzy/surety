@@ -1,0 +1,2 @@
+{"seq":1,"prevHash":"0000000000000000000000000000000000000000000000000000000000000000","oddsPacketRef":"phase0-18237038:odds-1","reserves":1000,"markedLiabilities":60,"solvencyRatioBps":166666,"ts":1784056509920,"hash":"d7b03599088103c909966ecce7d54703903cea20ebbc4dda1c6a64587ae50535"}
+{"seq":2,"prevHash":"d7b03599088103c909966ecce7d54703903cea20ebbc4dda1c6a64587ae50535","oddsPacketRef":"phase0-18237038:odds-2","reserves":1000,"markedLiabilities":105,"solvencyRatioBps":95238,"ts":1784056510000,"hash":"bc3ac2feb189026c54cb8390d487fdb5e1440975184d3eecddba07886cab6b7e"}

@@ -79,6 +79,54 @@ policy identity bytes. Unsupported or unproven TxLINE fields fail during authori
 with a reason; they cannot become policies. The exact wire format and field boundary
 are documented in `docs/PREDICATE_GRAMMAR.md`.
 
+## Gate 3 — Underwriting vault and fully collateralized policy lifecycle
+
+**Status: PASS**
+
+Program: [`3e5r…8qVW`](https://explorer.solana.com/address/3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW?cluster=devnet)
+
+- PASS — The reproducible SBF binary was upgraded on devnet in
+  [transaction `2kbD…aBsd`](https://explorer.solana.com/tx/2kbD9V8LV2odm1pKXZETEDxraN8Nq7k8QTSaFVCe91dAF3RPYuohFbC2BhkgVbdLfscwHqgXg75d2qBPH9U3aBsd?cluster=devnet).
+  The deployed and local binaries have identical SHA-256
+  `a5f3b7349da3386e2e295563ea4990cef660cb682f8e0a3ecd3b36fef4538f2c`.
+- PASS — An LP deposited 1,000 program-minted **test USDC** and received shares in
+  [transaction `VbNr…Y35A`](https://explorer.solana.com/tx/VbNrtSSfrEAFi61MTN4KHFB8XssvF89LtXJ9yrnoyJ4dJDfrKWe9KjQnGMtRJdfqdcg9sq96UqKZbqtypGnY35A?cluster=devnet).
+- PASS — Policy issuance committed canonical predicate and quote hashes, charged a
+  10 test-USDC premium, and moved the full 100 test-USDC coverage into a
+  policy-specific escrow in
+  [transaction `5Pmz…HnFT`](https://explorer.solana.com/tx/5Pmzshspv5m2ai3DSuUhRJDBrtLFGVoqj6XJPdnDBnwqrCWVPPZnXkqF3UAgQo6ywbXXrno6xiuP8innFfXUHnFT?cluster=devnet).
+- PASS — A same-outcome policy above the 20% cap was deliberately submitted past
+  preflight and failed on-chain with `0x1781` (`BucketCapExceeded`) in
+  [transaction `4Tnr…1iRS`](https://explorer.solana.com/tx/4TnrkK2amsFc3cHWpFaoT6HWB5FuLaqpgTwe4mPkNWKaQWc1C5JKTav2sRHjpSr7Cfm8Z3YoKAMJC3jbxuyu1iRS?cluster=devnet).
+  Its policy PDA was not created and no tokens moved.
+- PASS — An unrelated newly generated caller expired the policy after its on-chain
+  deadline. The 100 escrowed test USDC returned to free reserves in
+  [transaction `66rX…wsbG`](https://explorer.solana.com/tx/66rXonUJpzc61U7jMaiRD9b1GcVrRfbGQ8XUmLwpaayci7nQ5J8N95svcKGqFvFz5hifgjHzBpr9dnZWjDszwsbG?cluster=devnet).
+- PASS — Independent CLI confirmation reported deposit, issuance, and expiry as
+  `Finalized` and the cap transaction as failed. Native tests pass 4/4, the SBF
+  build has no stack-frame violations, and the local lifecycle passes end-to-end.
+
+Evidence accounts: [test-USDC mint](https://explorer.solana.com/address/5hu7bznXnkQgFXTUzpjCs7cT26ACWbFmjUbK52tjdcuW?cluster=devnet),
+[vault](https://explorer.solana.com/address/5TDWp87JY7YMiHSv1AvnhTQfbSJeiZk4pUt1YUsfQ5qE?cluster=devnet), and
+[policy](https://explorer.solana.com/address/EUqwLVCPXbUZLgJsXqKFHtLpSWxJ4mirFkvq6TrXbNfR?cluster=devnet).
+
+Plain-English result: LP capital and premiums are SPL tokens, not dashboard numbers.
+Issuance physically locks the promised payout in a policy PDA. Concentrated exposure
+was rejected atomically, and escrow was released only after expiry. The evidence mint
+is a six-decimal devnet test token, not Circle USDC, and has no monetary value.
+
 ## COMPLIANCE
 
 Pending Gate 8.
+
+## Glass Balance Sheet marker (Gate 6 preparation)
+
+- PASS — `npm run test:phase6` proves identical inputs produce byte-identical
+  marked-liability attestations and that changing a figure breaks verification.
+- PASS — `npm run marker -- --input data/marker-input.json --output data/attestations.jsonl`
+  wrote a two-record hash chain; `npm run marker -- --verify-chain data/attestations.jsonl`
+  returned `PASS`.
+
+The marker is deterministic and hash-chained. The next integration step is posting
+these compact records through the on-chain `post_attestation` instruction alongside
+the settlement CPI.

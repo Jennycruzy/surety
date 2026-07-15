@@ -55,3 +55,19 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   or fail on `.forEach`. The replay recorder must preserve and parse the SSE framing.
 - **Status:** Workaround confirmed: use the same SSE block parser as the live stream,
   while retaining the original response bytes for checksum verification.
+
+## 2026-07-15 — Public devnet RPC dropped program-data write batches
+
+- **Observed:** Two 415 KiB uploads through `api.devnet.solana.com` exhausted five
+  and then ten blockhash retry windows with `Data writes to account failed: Max
+  retries exceeded`. Account-read bursts also received HTTP 429 responses.
+- **Impact:** The first upload left an incomplete buffer holding about 2.96 devnet
+  SOL. Its downloaded checksum differed from the local SBF binary, so it was never
+  deployed.
+- **Attempted:** Reclaimed the incomplete buffer rent; retried with a persistent
+  buffer keypair, RPC transport, skipped preflight, priority fee, and ten attempts.
+- **Resolution:** Resumed the persistent buffer through the TPU client. The final
+  deployed binary matches the local build byte-for-byte. The lifecycle runner now
+  retains signatures itself and backs off on HTTP 429 account/status reads.
+- **Status:** Resolved. This is Solana public-devnet infrastructure friction, not a
+  TxLINE API defect.
