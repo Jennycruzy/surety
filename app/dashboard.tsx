@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Nav from "./components/nav.js";
 
+export type BucketMark = { marked: string; utilizationBps: number };
 export type DashboardRecord = {
   seq: number;
   hash: string;
@@ -14,9 +16,15 @@ export type DashboardRecord = {
   timestampMs: string;
   attestationPda: string;
   transactionSignature: string;
+  bucketMarks: Record<string, BucketMark>;
 };
 
 const GOAL_TS = 1_784_060_376_027;
+const BUCKET_LABELS: Record<string, string> = {
+  "match:18237038:WIN_HOME": "France win",
+  "match:18237038:DRAW": "Draw",
+  "match:18237038:WIN_AWAY": "Spain win",
+};
 const short = (value: string) => `${value.slice(0, 6)}…${value.slice(-5)}`;
 const usdc = (value: string) => (Number(value) / 1_000_000).toLocaleString("en-US", { maximumFractionDigits: 2 });
 
@@ -37,11 +45,7 @@ export default function Dashboard({ records }: { records: DashboardRecord[] }) {
   const high = Math.max(...liabilitySeries) * 1.02;
 
   return <main>
-    <header className="topbar">
-      <div className="brand"><span className="brandmark">S</span><span>SURETY</span><small>DEVNET</small></div>
-      <nav><span className="active">Glass balance sheet</span><span>Coverage</span><span>Underwrite</span></nav>
-      <button className="wallet">7mV9…xP2a</button>
-    </header>
+    <Nav active="dashboard" />
 
     <section className="hero">
       <div><p className="eyebrow"><span className="live-dot" /> LIVE REPLAY · FRANCE v SPAIN</p><h1>Every liability.<br/><em>Visible.</em></h1><p className="lede">TxLINE consensus odds continuously re-mark ten fully collateralized policies. Every state is chained and written to Solana.</p></div>
@@ -68,7 +72,7 @@ export default function Dashboard({ records }: { records: DashboardRecord[] }) {
 
       <article className="panel buckets">
         <div className="panel-head"><div><span className="label">OUTCOME BUCKETS</span><h3>Exposure concentration</h3></div><span>10 open policies</span></div>
-        {[['France win',160,34],['Draw',120,22],['Spain win',120,goalLanded ? 86 : 57]].map(([name, amount, pct]) => <div className="bucket" key={String(name)}><div><span>{name}</span><strong>{amount} tUSDC</strong></div><div className="bucket-track"><span style={{width:`${pct}%`}} /></div></div>)}
+        {Object.entries(current.bucketMarks).map(([bucket, mark]) => <div className="bucket" key={bucket}><div><span>{BUCKET_LABELS[bucket] ?? bucket}</span><strong>{usdc(mark.marked)} tUSDC</strong></div><div className="bucket-track"><span style={{width:`${Math.min(100, mark.utilizationBps / 100)}%`}} /></div></div>)}
       </article>
 
       <article className="panel chain">

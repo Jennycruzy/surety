@@ -1,0 +1,2092 @@
+{
+  "address": "3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW",
+  "metadata": {
+    "name": "surety_core",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "SURETY fully collateralized prize indemnity and prop settlement vault"
+  },
+  "instructions": [
+    {
+      "name": "execute_withdrawal",
+      "discriminator": [
+        113,
+        121,
+        203,
+        232,
+        137,
+        139,
+        248,
+        249
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "withdrawal"
+          ]
+        },
+        {
+          "name": "asset_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "share_mint",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "withdrawal",
+          "writable": true
+        },
+        {
+          "name": "request_share_account",
+          "writable": true
+        },
+        {
+          "name": "lp_asset_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "expire_policy",
+      "discriminator": [
+        149,
+        24,
+        43,
+        100,
+        240,
+        50,
+        39,
+        124
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "bucket",
+            "policy"
+          ]
+        },
+        {
+          "name": "asset_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "bucket",
+          "writable": true,
+          "relations": [
+            "policy"
+          ]
+        },
+        {
+          "name": "policy",
+          "writable": true
+        },
+        {
+          "name": "policy_escrow",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_vault",
+      "discriminator": [
+        48,
+        191,
+        163,
+        44,
+        71,
+        129,
+        63,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "vault_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset_mint"
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "share_mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "vault_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "max_bucket_bps",
+          "type": "u16"
+        },
+        {
+          "name": "epoch_seconds",
+          "type": "i64"
+        },
+        {
+          "name": "margin_bps",
+          "type": "u16"
+        },
+        {
+          "name": "formula_version",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "issue_policy",
+      "discriminator": [
+        126,
+        159,
+        34,
+        92,
+        118,
+        55,
+        15,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "asset_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "holder_asset_account",
+          "writable": true
+        },
+        {
+          "name": "bucket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "arg",
+                "path": "args.bucket_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              },
+              {
+                "kind": "arg",
+                "path": "args.predicate_hash"
+              },
+              {
+                "kind": "arg",
+                "path": "args.nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policy_escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121,
+                  95,
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "policy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "IssuePolicyArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "lp_deposit",
+      "discriminator": [
+        27,
+        77,
+        210,
+        69,
+        12,
+        43,
+        148,
+        16
+      ],
+      "accounts": [
+        {
+          "name": "lp",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "asset_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "share_mint",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "lp_asset_account",
+          "writable": true
+        },
+        {
+          "name": "lp_share_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "assets",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "post_attestation",
+      "discriminator": [
+        12,
+        75,
+        255,
+        83,
+        59,
+        171,
+        141,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "attestor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "attestation",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "arg",
+                "path": "args.seq"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "PostAttestationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "request_withdrawal",
+      "discriminator": [
+        251,
+        85,
+        121,
+        205,
+        56,
+        201,
+        12,
+        177
+      ],
+      "accounts": [
+        {
+          "name": "lp",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "reserve",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "share_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "lp_share_account",
+          "writable": true
+        },
+        {
+          "name": "withdrawal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  105,
+                  116,
+                  104,
+                  100,
+                  114,
+                  97,
+                  119,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "lp"
+              },
+              {
+                "kind": "arg",
+                "path": "request_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "request_share_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  105,
+                  116,
+                  104,
+                  100,
+                  114,
+                  97,
+                  119,
+                  97,
+                  108,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "withdrawal"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "request_id",
+          "type": "u64"
+        },
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_policy",
+      "discriminator": [
+        180,
+        234,
+        21,
+        174,
+        50,
+        214,
+        91,
+        113
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "bucket",
+            "policy"
+          ]
+        },
+        {
+          "name": "asset_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "bucket",
+          "writable": true,
+          "relations": [
+            "policy"
+          ]
+        },
+        {
+          "name": "policy",
+          "writable": true
+        },
+        {
+          "name": "policy_escrow",
+          "writable": true
+        },
+        {
+          "name": "payout_account",
+          "writable": true
+        },
+        {
+          "name": "txline_program",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "daily_scores_merkle_roots"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "payload",
+          "type": {
+            "defined": {
+              "name": "StatValidationInput"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ExposureBucket",
+      "discriminator": [
+        210,
+        25,
+        219,
+        87,
+        97,
+        4,
+        244,
+        65
+      ]
+    },
+    {
+      "name": "Policy",
+      "discriminator": [
+        222,
+        135,
+        7,
+        163,
+        235,
+        177,
+        33,
+        68
+      ]
+    },
+    {
+      "name": "SolvencyAttestation",
+      "discriminator": [
+        42,
+        23,
+        198,
+        111,
+        115,
+        158,
+        250,
+        61
+      ]
+    },
+    {
+      "name": "Vault",
+      "discriminator": [
+        211,
+        8,
+        232,
+        43,
+        2,
+        152,
+        117,
+        119
+      ]
+    },
+    {
+      "name": "WithdrawalRequest",
+      "discriminator": [
+        242,
+        88,
+        147,
+        173,
+        182,
+        62,
+        229,
+        193
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AttestationPosted",
+      "discriminator": [
+        142,
+        97,
+        81,
+        56,
+        69,
+        155,
+        19,
+        243
+      ]
+    },
+    {
+      "name": "LpDeposited",
+      "discriminator": [
+        85,
+        211,
+        184,
+        159,
+        176,
+        224,
+        28,
+        72
+      ]
+    },
+    {
+      "name": "PolicyExpired",
+      "discriminator": [
+        165,
+        34,
+        27,
+        82,
+        79,
+        188,
+        9,
+        244
+      ]
+    },
+    {
+      "name": "PolicyIssued",
+      "discriminator": [
+        27,
+        206,
+        224,
+        78,
+        2,
+        95,
+        231,
+        160
+      ]
+    },
+    {
+      "name": "PolicySettled",
+      "discriminator": [
+        67,
+        45,
+        149,
+        235,
+        199,
+        184,
+        83,
+        77
+      ]
+    },
+    {
+      "name": "VaultInitialized",
+      "discriminator": [
+        180,
+        43,
+        207,
+        2,
+        18,
+        71,
+        3,
+        75
+      ]
+    },
+    {
+      "name": "WithdrawalExecuted",
+      "discriminator": [
+        37,
+        78,
+        199,
+        192,
+        51,
+        68,
+        173,
+        162
+      ]
+    },
+    {
+      "name": "WithdrawalRequested",
+      "discriminator": [
+        75,
+        207,
+        21,
+        12,
+        160,
+        102,
+        150,
+        55
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ZeroAmount",
+      "msg": "amount must be greater than zero"
+    },
+    {
+      "code": 6001,
+      "name": "ZeroCoverage",
+      "msg": "coverage must be greater than zero"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroPremium",
+      "msg": "premium must be greater than zero"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidBucketCap",
+      "msg": "bucket cap must be between 1 and 10,000 basis points"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidEpoch",
+      "msg": "withdrawal epoch must be greater than zero"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidMargin",
+      "msg": "margin must be at least 10,000 basis points"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidFormulaVersion",
+      "msg": "formula version must be non-zero"
+    },
+    {
+      "code": 6007,
+      "name": "MathOverflow",
+      "msg": "arithmetic overflow"
+    },
+    {
+      "code": 6008,
+      "name": "MathUnderflow",
+      "msg": "arithmetic underflow"
+    },
+    {
+      "code": 6009,
+      "name": "SolvencyInvariantViolation",
+      "msg": "vault accounting invariant failed"
+    },
+    {
+      "code": 6010,
+      "name": "ReserveBalanceMismatch",
+      "msg": "reserve token balance does not match free-reserve accounting"
+    },
+    {
+      "code": 6011,
+      "name": "DepositTooSmall",
+      "msg": "deposit is too small to mint one share"
+    },
+    {
+      "code": 6012,
+      "name": "WithdrawalTooSmall",
+      "msg": "withdrawal is too small to return one asset unit"
+    },
+    {
+      "code": 6013,
+      "name": "WithdrawalNotPending",
+      "msg": "withdrawal request is not pending"
+    },
+    {
+      "code": 6014,
+      "name": "EpochNotReached",
+      "msg": "withdrawal epoch has not been reached"
+    },
+    {
+      "code": 6015,
+      "name": "InsufficientFreeReserves",
+      "msg": "vault does not have enough free reserves"
+    },
+    {
+      "code": 6016,
+      "name": "EmptyVault",
+      "msg": "vault has no LP capital"
+    },
+    {
+      "code": 6017,
+      "name": "BucketCapExceeded",
+      "msg": "outcome bucket cap would be exceeded"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidPredicate",
+      "msg": "predicate encoding is empty or too long"
+    },
+    {
+      "code": 6019,
+      "name": "PredicateHashMismatch",
+      "msg": "predicate hash does not match canonical predicate bytes"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidExpiry",
+      "msg": "policy expiry must be in the future"
+    },
+    {
+      "code": 6021,
+      "name": "PolicyNotOpen",
+      "msg": "policy is not open"
+    },
+    {
+      "code": 6022,
+      "name": "PolicyNotExpired",
+      "msg": "policy has not reached its expiry"
+    },
+    {
+      "code": 6023,
+      "name": "EscrowBalanceMismatch",
+      "msg": "policy escrow does not contain the full coverage amount"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidShareSupply",
+      "msg": "share supply and capital state are inconsistent"
+    },
+    {
+      "code": 6025,
+      "name": "TxlineProofTooLarge",
+      "msg": "TxLINE proof contains too many nodes or stats"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidProofTimestamp",
+      "msg": "TxLINE proof timestamp cannot derive a valid daily root"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidTxlineRoot",
+      "msg": "TxLINE daily scores root is not the expected program-owned PDA"
+    },
+    {
+      "code": 6028,
+      "name": "TxlineSerializationFailed",
+      "msg": "failed to serialize the pinned TxLINE validation instruction"
+    },
+    {
+      "code": 6029,
+      "name": "MissingTxlineReturnData",
+      "msg": "TxLINE validation CPI returned no result"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidTxlineReturnProgram",
+      "msg": "validation return data did not originate from TxLINE"
+    },
+    {
+      "code": 6031,
+      "name": "TxlinePredicateRejected",
+      "msg": "TxLINE rejected the policy predicate"
+    },
+    {
+      "code": 6032,
+      "name": "SettlementPredicateMismatch",
+      "msg": "settlement proof does not exactly match the policy predicate"
+    },
+    {
+      "code": 6033,
+      "name": "SettlementNotFinal",
+      "msg": "settlement requires TxLINE final-period statistics"
+    },
+    {
+      "code": 6034,
+      "name": "InvalidAttestationSequence",
+      "msg": "attestation sequence must extend the current vault head"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidAttestationPreviousHash",
+      "msg": "attestation previous hash does not match the current vault head"
+    },
+    {
+      "code": 6036,
+      "name": "AttestationBookMismatch",
+      "msg": "attested reserves or locked collateral do not match the vault"
+    },
+    {
+      "code": 6037,
+      "name": "InvalidSolvencyRatio",
+      "msg": "attested solvency ratio does not match reserves and marked liabilities"
+    },
+    {
+      "code": 6038,
+      "name": "InvalidAttestationHash",
+      "msg": "attestation record hash does not match its canonical fields"
+    }
+  ],
+  "types": [
+    {
+      "name": "AttestationPosted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "attestation",
+            "type": "pubkey"
+          },
+          {
+            "name": "seq",
+            "type": "u64"
+          },
+          {
+            "name": "prev_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "record_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reserves",
+            "type": "u64"
+          },
+          {
+            "name": "marked_liabilities",
+            "type": "u64"
+          },
+          {
+            "name": "solvency_ratio_bps",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExposureBucket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "bucket_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "locked_exposure",
+            "type": "u64"
+          },
+          {
+            "name": "open_policy_count",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IssuePolicyArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "predicate_len",
+            "type": "u8"
+          },
+          {
+            "name": "predicate_bytes",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "predicate_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "quote_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bucket_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "payout_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "coverage",
+            "type": "u64"
+          },
+          {
+            "name": "premium",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LpDeposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "lp",
+            "type": "pubkey"
+          },
+          {
+            "name": "assets",
+            "type": "u64"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Policy",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "PolicyStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "predicate_len",
+            "type": "u8"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bucket",
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "predicate_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "quote_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bucket_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "merkle_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "predicate_bytes",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "coverage",
+            "type": "u64"
+          },
+          {
+            "name": "premium",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicyExpired",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "caller",
+            "type": "pubkey"
+          },
+          {
+            "name": "coverage",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicyIssued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "holder",
+            "type": "pubkey"
+          },
+          {
+            "name": "coverage",
+            "type": "u64"
+          },
+          {
+            "name": "premium",
+            "type": "u64"
+          },
+          {
+            "name": "predicate_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "quote_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bucket_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicySettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "caller",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "coverage",
+            "type": "u64"
+          },
+          {
+            "name": "merkle_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicyStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Triggered"
+          },
+          {
+            "name": "Expired"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PostAttestationArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seq",
+            "type": "u64"
+          },
+          {
+            "name": "prev_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "record_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "odds_packet_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "book_snapshot_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reserves",
+            "type": "u64"
+          },
+          {
+            "name": "locked_collateral",
+            "type": "u64"
+          },
+          {
+            "name": "marked_liabilities",
+            "type": "u64"
+          },
+          {
+            "name": "solvency_ratio_bps",
+            "type": "u64"
+          },
+          {
+            "name": "observed_at_ms",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProofNode",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "is_right_sibling",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreStat",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "u32"
+          },
+          {
+            "name": "value",
+            "type": "i32"
+          },
+          {
+            "name": "period",
+            "type": "i32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoresBatchSummary",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "update_stats",
+            "type": {
+              "defined": {
+                "name": "ScoresUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "events_sub_tree_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoresUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "update_count",
+            "type": "i32"
+          },
+          {
+            "name": "min_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "max_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SolvencyAttestation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "seq",
+            "type": "u64"
+          },
+          {
+            "name": "prev_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "record_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "odds_packet_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "book_snapshot_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reserves",
+            "type": "u64"
+          },
+          {
+            "name": "locked_collateral",
+            "type": "u64"
+          },
+          {
+            "name": "marked_liabilities",
+            "type": "u64"
+          },
+          {
+            "name": "solvency_ratio_bps",
+            "type": "u64"
+          },
+          {
+            "name": "observed_at_ms",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatLeaf",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stat",
+            "type": {
+              "defined": {
+                "name": "ScoreStat"
+              }
+            }
+          },
+          {
+            "name": "stat_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatValidationInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "fixture_summary",
+            "type": {
+              "defined": {
+                "name": "ScoresBatchSummary"
+              }
+            }
+          },
+          {
+            "name": "fixture_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "main_tree_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "event_stat_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "stats",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "StatLeaf"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "asset_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "vault_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "reserve",
+            "type": "pubkey"
+          },
+          {
+            "name": "share_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_capital",
+            "type": "u64"
+          },
+          {
+            "name": "free_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "locked_liabilities",
+            "type": "u64"
+          },
+          {
+            "name": "max_bucket_bps",
+            "type": "u16"
+          },
+          {
+            "name": "epoch_seconds",
+            "type": "i64"
+          },
+          {
+            "name": "policy_count",
+            "type": "u64"
+          },
+          {
+            "name": "attestation_seq",
+            "type": "u64"
+          },
+          {
+            "name": "latest_attestation_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "margin_bps",
+            "type": "u16"
+          },
+          {
+            "name": "formula_version",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VaultInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "share_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "max_bucket_bps",
+            "type": "u16"
+          },
+          {
+            "name": "epoch_seconds",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "lp",
+            "type": "pubkey"
+          },
+          {
+            "name": "request",
+            "type": "pubkey"
+          },
+          {
+            "name": "assets",
+            "type": "u64"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "lp",
+            "type": "pubkey"
+          },
+          {
+            "name": "share_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "request_id",
+            "type": "u64"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "unlock_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "WithdrawalStatus"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalRequested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "lp",
+            "type": "pubkey"
+          },
+          {
+            "name": "request",
+            "type": "pubkey"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "unlock_ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawalStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "Executed"
+          }
+        ]
+      }
+    }
+  ]
+}

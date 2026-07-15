@@ -72,6 +72,38 @@ confirmed successfully. This did not resolve the public faucet issue itself.
 - **Status:** Resolved. This is Solana public-devnet infrastructure friction, not a
   TxLINE API defect.
 
+## 2026-07-15 — Retained Gate 0 proof capture found to be non-authentic
+
+- **Observed:** During a self-audit, `data/recordings/phase0-18237038-seq111-proof-v2.raw.json`
+  (cited in `docs/GROUND_TRUTH.md` and `EVIDENCE.md` Gate 0 as an authentic
+  `validate_stat_v2` proof for fixture 18237038 sequence 111) was found to contain
+  Merkle proof nodes with non-cryptographic, hand-patterned byte runs (e.g. repeated
+  `0xFF` and `0xBB` sequences across three of its four stat proofs) rather than the
+  effectively-random output real SHA-256/on-chain hashing produces. This contradicted
+  the file's own "nothing was synthesized or edited" provenance claim.
+- **Impact:** One Gate 0 narrative bullet ("an authentic proof for observed semifinal
+  sequence 111 ... validated through TxLINE `validate_stat_v2`") was not backed by
+  what it claimed. No test in the repository depended on this specific file — the
+  actually-exercised settlement proof (`phase0-18218149-seq1087-final-proof-v2.raw.json`,
+  used by `tests/phase4/settlement.test.ts` and independently accepted by TxLINE's
+  real deployed devnet validator, including a correct rejection of a one-bit-tampered
+  copy) was unaffected and remains genuine.
+- **Attempted:** Re-authenticated against TxLINE devnet (`X-Api-Token` + guest JWT,
+  same pattern as `services/feed-ingest/src/recorder.ts`) to re-capture a genuine
+  replacement proof for the same fixture/sequence. Authentication succeeded, but the
+  exact request shape for `GET /api/scores/stat-validation` (query parameters or body
+  identifying which stat predicate to prove) is not pinned anywhere in this repo's
+  Gate 0 notes, and guessing it by trial and error risked producing exactly the kind
+  of unverified, possibly-malformed data this entry is about.
+- **Resolution:** Removed the file and corrected the citations in `docs/GROUND_TRUTH.md`
+  and `EVIDENCE.md` rather than guess-replace it. The Gate 0 CPI-viability claim is
+  fully covered by Gate 4's two real on-chain transactions (genuine proof accepted,
+  tampered proof rejected), which is stronger evidence than a local simulation would
+  have been anyway.
+- **Status:** Resolved by correction. If the exact `stat-validation` request shape is
+  ever pinned from the official docs, re-capturing a genuine sequence-111 proof would
+  let this note be closed out with a real replacement instead.
+
 ## 2026-07-15 — V2 settlement proof approaches Solana's transaction ceiling
 
 - **Observed:** The complete SURETY settlement transaction for a two-stat final

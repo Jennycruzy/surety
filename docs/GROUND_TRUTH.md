@@ -166,14 +166,27 @@ a boolean return value, so the proposed atomic flow is implementable in principl
 3. decode and require `true`;
 4. transfer policy escrow in the same SURETY instruction.
 
-Direct `validate_stat_v2` simulation with an authentic semifinal proof returned
-`true`. Flipping one bit in `mainTreeProof[0].hash[0]` caused the program to reject the
-proof. The downstream SURETY CPI and atomic token release remain Gate 4 work.
+An earlier off-chain `validate_stat_v2` simulation against a captured France–Spain
+semifinal proof (fixture `18237038`, sequence 111) is **not usable as evidence**: the
+retained capture for that proof was later found to contain non-cryptographic
+placeholder bytes in its Merkle proof nodes (repeated `0xFF`/patterned runs, not real
+hash output) rather than an authentic response. The file has been removed; see
+`docs/FRICTION_LOG.md` for the dated writeup. The underlying claim — a real proof
+validates and a one-bit-tampered proof is rejected — is instead proven, authoritatively
+and on-chain rather than by local simulation, at Gate 4 using a different, genuinely
+authentic capture (`data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json`,
+the Spain–Belgium final record). See `EVIDENCE.md` Gate 4 for the two devnet
+transaction signatures.
 
 ## Raw packet samples
 
-All artifacts below were written directly from authenticated HTTP response bytes. No
-fixture, price, result, proof, signature, or sequence was synthesized or edited.
+All artifacts below were written directly from authenticated HTTP response bytes and
+independently corroborated: each remaining proof file was accepted by TxLINE's own
+deployed on-chain validator in a real devnet transaction (see `EVIDENCE.md` Gate 4),
+which is stronger evidence of authenticity than a byte-provenance claim alone. One
+artifact previously listed here (`phase0-18237038-seq111-proof-v2.raw.json`) was
+removed after its Merkle proof nodes were found to contain non-cryptographic
+placeholder bytes rather than genuine hash output — see `docs/FRICTION_LOG.md`.
 
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|
@@ -181,7 +194,6 @@ fixture, price, result, proof, signature, or sequence was synthesized or edited.
 | `data/recordings/phase0-18237038-odds.raw.sse` | 289,212 | `5676364ca687377c3cccd33abe265da8edc6caa600f261f1f790e6fe56f70c23` |
 | `data/recordings/phase0-18237038-scores-snapshot.raw.json` | 40,958 | `07e26845527ed6acfc8229b27aa932411cafd468253d259a93758f504a89861b` |
 | `data/recordings/phase0-18237038-odds-snapshot.raw.json` | 9,029 | `bedb9df15f9fdce7c0ee5178bba0fc5bdd3c21e46c5b9ea3775b626458763434` |
-| `data/recordings/phase0-18237038-seq111-proof-v2.raw.json` | 3,081 | `9eb432846135c427a068324689aac7d7e23990d39dd2d44e165b713dd5091cdc` |
 | `data/recordings/phase0-18218149-historical.raw.json` | 1,101,803 | `2b3080034d82d9200a05a70dd5c3f42090b628294df9e210986d1ab4be4a01c0` |
 | `data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json` | 3,862 | `491a0a0ebc3b9502e5d4fba837a4276f6cda0c28d4617c511562a3d9f4b5dc87` |
 

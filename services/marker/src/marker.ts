@@ -17,9 +17,11 @@ export type MarkerInput = {
   vault: string;
   reserves: string;
   lockedCollateral: string;
+  maxBucketBps: number;
   policies: Policy[];
   updates: OddsUpdate[];
 };
+export type BucketMark = { marked: string; utilizationBps: number };
 export type Attestation = {
   seq: number;
   prevHash: string;
@@ -32,6 +34,7 @@ export type Attestation = {
   solvencyRatioBps: string;
   timestampMs: string;
   hash: string;
+  bucketMarks: Record<string, BucketMark>;
   attestationPda?: string;
   transactionSignature?: string;
 };
@@ -61,7 +64,7 @@ function i64(value: bigint): Buffer {
   return bytes;
 }
 
-export function computeAttestationHash(attestation: Omit<Attestation, "hash" | "oddsPacketRef" | "attestationPda" | "transactionSignature">): string {
+export function computeAttestationHash(attestation: Omit<Attestation, "hash" | "oddsPacketRef" | "bucketMarks" | "attestationPda" | "transactionSignature">): string {
   return sha(
     Buffer.concat([
       DOMAIN,
@@ -82,6 +85,9 @@ function validateInput(input: MarkerInput): void {
   const reserves = BigInt(input.reserves);
   const locked = BigInt(input.lockedCollateral);
   if (reserves <= 0n || locked < 0n || locked > reserves) throw new Error("invalid vault figures");
+  if (!Number.isInteger(input.maxBucketBps) || input.maxBucketBps <= 0 || input.maxBucketBps > 10_000) {
+    throw new Error("maxBucketBps must be an integer in 1..10000");
+  }
   const ids = new Set<string>();
   for (const policy of input.policies) {
     if (ids.has(policy.id)) throw new Error(`duplicate policy ${policy.id}`);
@@ -106,16 +112,28 @@ export function buildChain(
       policies,
     }),
   );
+  const totalCapital = BigInt(input.reserves);
+  const bucketCap = (totalCapital * BigInt(input.maxBucketBps)) / BPS;
   let prevHash = start.prevHash;
   return input.updates.map((update, index) => {
     hex32("packetHash", update.packetHash);
-    const weighted = policies.reduce((sum, policy) => {
+    const weightedByBucket = new Map<string, bigint>();
+    for (const policy of policies) {
       const probability = update.probabilityPpmByBucket[policy.bucket];
       if (!Number.isInteger(probability) || probability! < 0 || probability! > 1_000_000) {
         throw new Error(`packet ${update.packetRef} has no valid probability for ${policy.bucket}`);
       }
-      return sum + BigInt(policy.coverage) * BigInt(probability!);
-    }, 0n);
+      const contribution = BigInt(policy.coverage) * BigInt(probability!);
+      weightedByBucket.set(policy.bucket, (weightedByBucket.get(policy.bucket) ?? 0n) + contribution);
+    }
+    const bucketMarks: Record<string, BucketMark> = {};
+    let weighted = 0n;
+    for (const [bucket, bucketWeighted] of [...weightedByBucket].sort(([a], [b]) => a.localeCompare(b))) {
+      weighted += bucketWeighted;
+      const bucketMarked = bucketWeighted / PPM;
+      const utilizationBps = bucketCap === 0n ? 0 : Number((bucketMarked * BPS + bucketCap - 1n) / bucketCap);
+      bucketMarks[bucket] = { marked: bucketMarked.toString(), utilizationBps };
+    }
     const marked = weighted / PPM;
     const ratio = marked === 0n ? 0n : (BigInt(input.reserves) * BPS) / marked;
     const body = {
@@ -133,6 +151,7 @@ export function buildChain(
     const attestation: Attestation = {
       ...body,
       oddsPacketRef: update.packetRef,
+      bucketMarks,
       hash,
     };
     prevHash = hash;
@@ -143,7 +162,7 @@ export function buildChain(
 export function verifyChain(chain: Attestation[]): boolean {
   let prevHash = "0".repeat(64);
   for (const attestation of chain) {
-    const { hash, oddsPacketRef: _ref, attestationPda: _pda, transactionSignature: _sig, ...body } = attestation;
+    const { hash, oddsPacketRef: _ref, bucketMarks: _marks, attestationPda: _pda, transactionSignature: _sig, ...body } = attestation;
     if (attestation.prevHash !== prevHash || computeAttestationHash(body) !== hash) return false;
     prevHash = hash;
   }

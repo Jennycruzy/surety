@@ -17,6 +17,13 @@ capture, and `verify-chain` matches every local field to every on-chain account.
 Gate 6 remains formally incomplete only because its required dashboard screen
 recording has not yet been produced; this repository does not claim that artifact.
 
+Gate 7 wires the Next.js application to the same pinned devnet vault: `npm run build:web`
+produces a clean production build, live vault/quote reads resolve against real on-chain
+state, and settlement is exposed as a permissionless client capability whose proof→payout
+path is shared byte-for-byte with the Gate 4 devnet test. Policies whose fixture has no
+authentic captured TxLINE proof are refused at settle time rather than settled with
+synthesized data. See `EVIDENCE.md` Gate 7.
+
 Run the Glass Balance Sheet locally with `npm run dev` and open
 `http://localhost:3000`. The production build is checked with `npm run build:web`.
 

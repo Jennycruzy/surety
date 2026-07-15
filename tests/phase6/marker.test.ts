@@ -6,6 +6,7 @@ const input: MarkerInput = {
   vault: "vault-1",
   reserves: "1000000000",
   lockedCollateral: "150000000",
+  maxBucketBps: 2_000,
   policies: [
     { id: "p1", coverage: "100000000", bucket: "winner" },
     { id: "p2", coverage: "50000000", bucket: "winner" },

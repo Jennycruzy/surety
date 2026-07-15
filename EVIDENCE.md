@@ -21,9 +21,15 @@ Verified so far:
   [open transaction](https://explorer.solana.com/tx/2ph7xmYEs2eLGXPQHGEfKT74fZoc18ZQA274sx5U1hoHnqPN7uFmjmJ91AgEMswzBWb8oCQ85y3BaR1FKXKvY2TY?cluster=devnet).
 - PASS — Authenticated France–Spain raw capture contains 35,031 score-stream bytes
   and 289,212 odds-stream bytes. Checksums are recorded in `GROUND_TRUTH.md`.
-- PASS — An authentic proof for observed semifinal sequence 111 returned four
-  `ScoreStat` leaves and validated through TxLINE `validate_stat_v2` on devnet.
-- PASS — A one-bit mutation to `mainTreeProof[0].hash[0]` was rejected.
+- CORRECTED — An earlier off-chain simulation claimed an authentic proof for observed
+  semifinal sequence 111 validated through TxLINE `validate_stat_v2`. The retained
+  capture backing that claim was later found to contain non-cryptographic placeholder
+  bytes, not a real TxLINE response; the file and the claim have been removed (see
+  `docs/GROUND_TRUTH.md` and `docs/FRICTION_LOG.md`). The same underlying claim — a
+  real proof validates, a one-bit-tampered proof is rejected — is proven authoritatively
+  in Gate 4 below via two real devnet transactions using a different, genuinely
+  authentic capture, which is stronger evidence than the removed local simulation ever
+  was.
 - PASS — The authentic Spain–Belgium `game_finalised` record at sequence 1087 has
   `StatusId=100`; its verified proof leaves all carry `period=100`.
 
@@ -230,6 +236,94 @@ Plain-English result: the balance sheet is no longer an off-chain dashboard clai
 Its figures are fixed-point, its history is tamper-evident, and each compact record
 exists in a dedicated devnet account. The missing item is presentation evidence, not
 the protocol chain.
+
+## Gate 7 — Application layer and permissionless settlement
+
+**Status: PASS (protocol + web); one presentation artifact still pending under Gate 6)**
+
+The Next.js application is wired to the real pinned devnet vault, not a demo copy. During
+this gate several defects that made the web layer non-functional were found by direct
+audit and fixed; each claim below was re-verified after the fix.
+
+- PASS — `npm run build:web` produces an optimized production build (exit 0): `/`,
+  `/coverage`, `/props` static and `/underwrite`, `/policy/[address]` server-rendered on
+  demand. `npx tsc --noEmit` is clean.
+- CORRECTED — The web layer previously could not build or read chain state:
+  - `app/lib/surety-client.ts` loaded the IDL with `node:fs`, which was pulled into the
+    client bundle (`the chunking context does not support external modules: node:fs`).
+    The IDL is now a static JSON import, so the module is browser-safe.
+  - Every live account read used camelCase fields (`vault.policyCount`,
+    `policy.predicateBytes`, …) against a `BorshAccountsCoder` that returns **snake_case**,
+    so each read threw at runtime. The reads now use the Anchor account namespace
+    (`program.account.vault.fetch`, `.policy.fetch`, `.exposureBucket.fetch`), which is the
+    same camelCased path the passing devnet tests use.
+  - `next/link` did not resolve under `moduleResolution: NodeNext`; the four-item navbar
+    now uses plain anchors. `tests/phase6/attestation-devnet.test.ts` was updated for the
+    marker's new required `maxBucketBps` field.
+- PASS — Live reads verified against vault
+  [`CDyQ…ZkqEC`](https://explorer.solana.com/address/CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC?cluster=devnet):
+  `getVaultStats` returns `total_capital = 1,203,418,534`, `policy_count = 10`, share price
+  `1.203418`; `requestQuote(WIN_HOME, 100)` returns verdict SURCHARGE with normalized
+  probability `359,202` ppm — the exact France full-match value recorded at Gate 5.
+- PASS — Settlement is now a first-class client capability, not test-only code. The proof→
+  payload mapping (`services/settlement/src/v2-payload.ts`) and the transaction builder
+  (`buildSettlePolicyTx`) are shared by both the Gate 4 devnet test and the app's
+  permissionless `settlePolicy` server action, so the UI settlement path is byte-identical
+  to the one TxLINE's deployed validator accepts. Re-running Gate 4 through the shared code
+  produced a fresh authentic settlement
+  [`5VeJ…3ux8q`](https://explorer.solana.com/tx/5VeJNDvujC9EgXPY3GrWdJZJFoKqHK1Kp15FpWmDxQ28ubByZcxrSo4tovqNCV9ojFFTdo6GyrrJaSLY1JZ3ux8q?cluster=devnet)
+  and a rejected one-bit-tampered attempt
+  [`Zvv5…farW`](https://explorer.solana.com/tx/Zvv5umPkM9ku19N1DMCRFsnwUcYUy9MJEDa8PjP8v6YKr5zRacv4LEY4xW2EK9QTsEBHaYCuh7So2cRSsxXfarW?cluster=devnet)
+  from freshly generated permissionless caller `Dr1gYqURoCWfzsk65jucGEg2jDQy4cao7bvSHgpEnZ8q`.
+- PASS — Honest settlement gating. The ten open France–Spain policies are on fixture
+  `18237038`, for which **no authentic TxLINE proof has been captured** (the only genuine
+  final-outcome proof on hand is the Spain–Belgium `18218149` capture, and that match was
+  never captured finalized for `18237038`). The settle action therefore refuses these
+  policies with a plain reason and submits nothing; it never synthesizes proof bytes to
+  force a payout. This is the same discipline that removed the non-authentic Gate 0 capture
+  (see `docs/FRICTION_LOG.md`).
+- PASS — Dedicated settleable demo. Because the fixture SURETY holds a genuine proof for is
+  Spain–Belgium `18218149`, a separate demo vault
+  [`QVze…qDh9`](https://explorer.solana.com/address/QVze8qNHiFF4pNM684TJTV8fM67acaHYE9ZAKQcqDh9?cluster=devnet)
+  was stood up (`scripts/setup-settlement-demo.ts`) holding an **open** `18218149` WIN_HOME
+  policy
+  [`CpCd…pqXGq`](https://explorer.solana.com/address/CpCdFcNkHHjQwW7J4AKyuRZNxusRMi8a6kSKjM2pqXGq?cluster=devnet),
+  reachable in the app at `/policy/CpCd…pqXGq` and settleable by anyone through the same
+  permissionless path. The vault-agnostic builder derives every account from the policy's
+  own `vault` field and was verified end-to-end: sibling policy
+  [`Con2…rXCmp`](https://explorer.solana.com/address/Con2wwzsWAZUYL3YJTzPi1AyyJ8BjVYHduHvpaqrXCmp?cluster=devnet)
+  settled on that vault in
+  [`iXnC…7NfH`](https://explorer.solana.com/tx/iXnC7c4W3ySnPfJVZfwyCMNi8RkJZVG29EapifGaoWSXgBbE3QfZajHtck8DFE4eiHDHMDwwc5H1gtCnB3L7NfH?cluster=devnet)
+  (status `Triggered`), and simulating the app's own settle transaction against the still-open
+  demo policy returns success with the TxLINE CPI validated (the demo policy is left open so a
+  viewer can fire the real payout). The France–Spain showcase vault `CDyQ…ZkqEC` is untouched.
+
+**Asset mint note.** Gate 3's lifecycle used a throwaway six-decimal test-USDC mint
+`5hu7bznXnkQgFXTUzpjCs7cT26ACWbFmjUbK52tjdcuW`. The live app vault `CDyQ…ZkqEC` (Gates 5–7)
+uses a distinct test-USDC mint `FiJfrnLoc2vZmjixZqCEBuWd8A5EuDaF9MZZhd96bpck`; the vault's
+on-chain `asset_mint` field was decoded and confirms `FiJf…bpck`. Both are valueless devnet
+tokens with no relation to Circle USDC.
+
+- PASS — Program reproducibility re-verified in-environment. `anchor build` produced
+  `target/deploy/surety_core.so` with SHA-256
+  `afd0962c90732c7cdcc624bf753ed36066364fa902648a5e1b7cbc3607ef95cd`, matching both the
+  Gate 6 claim and a fresh `solana program dump` of the deployed program — byte for byte.
+- PASS — Deployment readiness. The faucet and settlement server actions load the deployer
+  key via `SURETY_DEPLOYER_SECRET` (env var) with a local-file fallback, and `next.config.ts`
+  traces the authentic capture files into the serverless bundle, so the app hosts on any
+  serverless Next platform (see `DEPLOY.md`) — no VPS required.
+
+- PASS — B-roll capture. `scripts/capture-broll.mjs` (Playwright) records the wallet-free
+  portions of the running app — the glass balance sheet animating through the goal and the
+  settlement demo policy page — to `data/evidence/gate6-glass-balance-sheet.webm`. This is
+  an automated capture of the genuine app, suitable as the Gate 6 dashboard artifact and as
+  b-roll for the submission video.
+
+**Remaining human artifact:**
+
+- The narrated ≤5-minute submission demo video must be recorded by the team (voiceover plus
+  the wallet-signed buy-coverage flow, which a headless capture cannot drive). A scene-by-
+  scene script is in `DEMO_SCRIPT.md`.
 
 ## COMPLIANCE
 

@@ -36,5 +36,5 @@ verify-phase6:
 verify-chain:
 	npm run marker -- --verify-chain data/attestations-gate6.jsonl --rpc https://api.devnet.solana.com
 
-verify: verify-phase1 verify-phase2 verify-phase3 verify-chain
+verify: verify-phase1 verify-phase2 verify-phase3 verify-phase4 verify-phase5 verify-phase6
 	@echo "PASS: SURETY verification gates completed"

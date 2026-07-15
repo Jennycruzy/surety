@@ -18,12 +18,13 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
+import { settlementPayloadFromProof, type RawV2Proof } from "../../services/settlement/src/v2-payload.js";
 import type { SuretyCore } from "../../target/types/surety_core.js";
 
 const idl = JSON.parse(readFileSync("target/idl/surety_core.json", "utf8")) as SuretyCore;
 const proof = JSON.parse(
   readFileSync("data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json", "utf8"),
-);
+) as RawV2Proof;
 const PROGRAM_ID = new PublicKey(idl.address);
 const TXLINE_PROGRAM_ID = new PublicKey("6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J");
 const SCALE = 1_000_000;
@@ -42,34 +43,8 @@ function u64(value: bigint): Buffer {
   return bytes;
 }
 
-function mapProof(nodes: { hash: number[]; isRightSibling: boolean }[]) {
-  return nodes.map((node) => ({ hash: node.hash, isRightSibling: node.isRightSibling }));
-}
-
-function settlementPayload(tamperMainProof: boolean) {
-  const mainTreeProof = mapProof(proof.mainTreeProof);
-  if (tamperMainProof) mainTreeProof[0]!.hash = [...mainTreeProof[0]!.hash];
-  if (tamperMainProof) mainTreeProof[0]!.hash[0] = mainTreeProof[0]!.hash[0]! ^ 1;
-  return {
-    ts: new BN(proof.ts),
-    fixtureSummary: {
-      fixtureId: new BN(proof.summary.fixtureId),
-      updateStats: {
-        updateCount: proof.summary.updateStats.updateCount,
-        minTimestamp: new BN(proof.summary.updateStats.minTimestamp),
-        maxTimestamp: new BN(proof.summary.updateStats.maxTimestamp),
-      },
-      eventsSubTreeRoot: proof.summary.eventStatsSubTreeRoot,
-    },
-    fixtureProof: mapProof(proof.subTreeProof),
-    mainTreeProof,
-    eventStatRoot: proof.eventStatRoot,
-    stats: proof.statsToProve.slice(0, 2).map((stat: unknown, index: number) => ({
-      stat,
-      statProof: mapProof(proof.statProofs[index]),
-    })),
-  };
-}
+const settlementPayload = (tamperMainProof: boolean) =>
+  settlementPayloadFromProof(proof, { tamperMainProof });
 
 async function retry<T>(label: string, operation: () => Promise<T>): Promise<T> {
   for (let attempt = 0; ; attempt += 1) {

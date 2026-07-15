@@ -91,6 +91,7 @@ test("real replay posts a deterministic on-chain Glass Balance Sheet chain", asy
     vault: vault.toBase58(),
     reserves: vaultState.totalCapital.toString(),
     lockedCollateral: vaultState.lockedLiabilities.toString(),
+    maxBucketBps: vaultState.maxBucketBps,
     policies: records.map((record) => ({
       id: record.policy,
       coverage: record.request.coverage,
