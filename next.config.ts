@@ -6,9 +6,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/**": [
-      "./data/recordings/**",
+      "./data/recordings/*-odds-snapshot.raw.json",
+      "./data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json",
       "./data/attestations-gate6.jsonl",
-      "./target/idl/**",
+      "./target/idl/surety_core.json",
     ],
   },
 };

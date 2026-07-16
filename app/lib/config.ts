@@ -6,12 +6,18 @@ export const TXLINE_PROGRAM_ID = new PublicKey("6pW64gN1s2uqjHkn1unFeEjAwJkPGHop
 
 // The live devnet vault Gates 5/6 already quote, issue, and mark against.
 // Phase 7 extends this same protocol state rather than standing up a disconnected demo vault.
-export const VAULT = new PublicKey("CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC");
-export const ASSET_MINT = new PublicKey("FiJfrnLoc2vZmjixZqCEBuWd8A5EuDaF9MZZhd96bpck");
+export const VAULT = new PublicKey(
+  process.env.NEXT_PUBLIC_SURETY_VAULT ?? "CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC",
+);
+export const ASSET_MINT = new PublicKey(
+  process.env.NEXT_PUBLIC_SURETY_ASSET_MINT ?? "FiJfrnLoc2vZmjixZqCEBuWd8A5EuDaF9MZZhd96bpck",
+);
 export const ASSET_DECIMALS = 6;
 
-// The France v Spain semifinal fixture Gates 5/6 already quote and mark against.
-export const FIXTURE_ID = 18237038n;
+// Defaults preserve the audited France–Spain demo. A separate build can point at a
+// newly captured live fixture without modifying source or disturbing this deployment.
+export const FIXTURE_ID = BigInt(process.env.NEXT_PUBLIC_SURETY_FIXTURE_ID ?? "18237038");
+export const FIXTURE_LABEL = process.env.NEXT_PUBLIC_SURETY_FIXTURE_LABEL ?? "France v Spain, semifinal";
 
 export const FAUCET_AMOUNT = 2_000_000_000n; // 2,000 test-USDC (6 decimals) — one click covers a demo premium
 

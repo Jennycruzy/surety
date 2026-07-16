@@ -276,7 +276,8 @@ audit and fixed; each claim below was re-verified after the fix.
   [`Zvv5…farW`](https://explorer.solana.com/tx/Zvv5umPkM9ku19N1DMCRFsnwUcYUy9MJEDa8PjP8v6YKr5zRacv4LEY4xW2EK9QTsEBHaYCuh7So2cRSsxXfarW?cluster=devnet)
   from freshly generated permissionless caller `Dr1gYqURoCWfzsk65jucGEg2jDQy4cao7bvSHgpEnZ8q`.
 - PASS — Honest settlement gating. The ten open France–Spain policies are on fixture
-  `18237038`, for which **no authentic TxLINE proof has been captured** (the only genuine
+  `18237038`, for which **no authentic final-stat settlement proof has been captured** (an
+  authentic odds proof now exists, but it cannot replace a result proof; the only genuine
   final-outcome proof on hand is the Spain–Belgium `18218149` capture, and that match was
   never captured finalized for `18237038`). The settle action therefore refuses these
   policies with a plain reason and submits nothing; it never synthesizes proof bytes to
@@ -304,26 +305,49 @@ uses a distinct test-USDC mint `FiJfrnLoc2vZmjixZqCEBuWd8A5EuDaF9MZZhd96bpck`; t
 on-chain `asset_mint` field was decoded and confirms `FiJf…bpck`. Both are valueless devnet
 tokens with no relation to Circle USDC.
 
-- PASS — Program reproducibility re-verified in-environment. `anchor build` produced
+- PASS — Deployed-baseline reproducibility was re-verified at Gate 7. `anchor build` produced
   `target/deploy/surety_core.so` with SHA-256
   `afd0962c90732c7cdcc624bf753ed36066364fa902648a5e1b7cbc3607ef95cd`, matching both the
-  Gate 6 claim and a fresh `solana program dump` of the deployed program — byte for byte.
+  Gate 6 claim and a `solana program dump` of the deployed program — byte for byte. The
+  additive odds-validation source described below builds to a different binary and is not
+  included in this historical deployed-hash claim.
 - PASS — Deployment readiness. The faucet and settlement server actions load the deployer
   key via `SURETY_DEPLOYER_SECRET` (env var) with a local-file fallback, and `next.config.ts`
   traces the authentic capture files into the serverless bundle, so the app hosts on any
   serverless Next platform (see `DEPLOY.md`) — no VPS required.
 
-- PASS — B-roll capture. `scripts/capture-broll.mjs` (Playwright) records the wallet-free
-  portions of the running app — the glass balance sheet animating through the goal and the
-  settlement demo policy page — to `data/evidence/gate6-glass-balance-sheet.webm`. This is
-  an automated capture of the genuine app, suitable as the Gate 6 dashboard artifact and as
-  b-roll for the submission video.
+- TOOLING PASS / ARTIFACT PENDING — `scripts/capture-broll.mjs` (declared Playwright
+  dependency) now records at least 33 seconds across the glass balance sheet goal replay and
+  settlement policy page. The existing checked-in WebM predates that duration correction and
+  is not claimed as the formal Gate 6 recording. Re-run the script or replace it with the
+  narrated submission capture before marking Gate 6 complete.
 
 **Remaining human artifact:**
 
 - The narrated ≤5-minute submission demo video must be recorded by the team (voiceover plus
   the wallet-signed buy-coverage flow, which a headless capture cannot drive). A scene-by-
   scene script is in `DEMO_SCRIPT.md`.
+
+## Additive TxLINE odds validation — IN PROGRESS, NOT DEPLOYED
+
+- PASS — TxLINE devnet returned an authentic `/api/odds/validation` response for the exact
+  full-match 1X2 packet used by pricing: fixture `18237038`, message
+  `1837782566:00003:000791-10021-stab`, timestamp `1784056509431`. The 3,453 raw response
+  bytes are preserved with SHA-256
+  `98a580777e4ab036bad4c67f77884b422483123090d09eefa6bfd6c6d1ebb143`.
+- PASS — TxLINE's deployed devnet `validate_odds` returned `true` against root PDA
+  `9CrnWb2ZBtxX3B2C7GUDacb8AnjvySjyDtci7uy4gdoH`; changing one proof bit was rejected.
+- PASS — The additive SURETY source builds to SBF SHA-256
+  `918932e4593c04f3b188d6ee40a73c0b0f26d734855471a3314a457607f9845c`. Rust tests cover
+  the authentic prices, fixture/outcome binding, and a cross-language quote-hash vector.
+  TypeScript tests use the same vector.
+- PASS — Real proof sizing forced a two-transaction design: `record_validated_odds` is
+  1,227 bytes and `issue_policy_with_validated_odds` is 702 bytes. The first performs the
+  TxLINE CPI and stores a receipt; the second enforces a 15-minute freshness window and
+  recomputes premium from the proved prices and current vault exposure.
+- PENDING — local-validator lifecycle rerun, deployment, SURETY CPI receipt transaction,
+  and issuance from a fresh live-match receipt. The production app defaults to the existing
+  audited flow until `SURETY_REQUIRE_VALIDATED_ODDS=1` is explicitly configured.
 
 ## COMPLIANCE
 

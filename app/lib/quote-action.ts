@@ -2,14 +2,23 @@
 
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { PublicKey } from "@solana/web3.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
+import { oddsMessageHash, oddsMessageKey } from "../../services/odds-validation/src/txline.js";
+import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
 import { computeQuote, type BookState, type Outcome, type TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";
 import { ASSET_MINT, FIXTURE_ID } from "./config.js";
-import { bucketHashFor, bucketPda } from "./pda.js";
+import { bucketHashFor, bucketPda, validatedOddsPda } from "./pda.js";
 import { VAULT, getProgram, newConnection } from "./surety-client.js";
 
-const ODDS_SNAPSHOT_PATH = "data/recordings/phase0-18237038-odds-snapshot.raw.json";
+const ODDS_SNAPSHOT_FILE =
+  process.env.SURETY_ODDS_SNAPSHOT_FILE ?? "phase0-18237038-odds-snapshot.raw.json";
+if (path.basename(ODDS_SNAPSHOT_FILE) !== ODDS_SNAPSHOT_FILE) {
+  throw new Error("SURETY_ODDS_SNAPSHOT_FILE must be a filename inside data/recordings");
+}
+const ODDS_SNAPSHOT_PATH = path.join(process.cwd(), "data", "recordings", ODDS_SNAPSHOT_FILE);
+const REQUIRE_VALIDATED_ODDS = process.env.SURETY_REQUIRE_VALIDATED_ODDS === "1";
 
 export type QuoteRequestInput = {
   outcome: Outcome;
@@ -23,6 +32,9 @@ export type QuoteResult = {
   predicateLen: number;
   bucketHash: string;
   quoteHash: string;
+  auditQuoteHash: string;
+  validatedOddsMessageKeyHex: string | null;
+  validationMode: "txline-cpi" | "recorded-source";
   verdict: "ACCEPT" | "SURCHARGE" | "REJECT";
   probabilityPpm: number;
   premium: string | null;
@@ -44,6 +56,7 @@ export async function requestQuote(input: QuoteRequestInput): Promise<QuoteResul
   const packets = JSON.parse(sourceBytes.toString()) as TxlineWinnerPacket[];
   const packet = packets.find((p) => p.SuperOddsType === "1X2_PARTICIPANT_RESULT" && p.MarketPeriod === null);
   if (!packet) throw new Error("no full-match 1X2 packet found in recorded odds snapshot");
+  if (BigInt(packet.FixtureId) !== FIXTURE_ID) throw new Error("odds snapshot fixture does not match the configured fixture");
   const packetSourceSha256 = createHash("sha256").update(sourceBytes).digest("hex");
 
   const bucketHashHex = createHash("sha256").update(bucketHashFor(FIXTURE_ID, input.outcome)).digest("hex");
@@ -54,14 +67,8 @@ export async function requestQuote(input: QuoteRequestInput): Promise<QuoteResul
   const vault = await program.account.vault.fetch(VAULT);
 
   const bucketAddress = bucketPda(Buffer.from(bucketHashHex, "hex"));
-  let bucketExposure = 0n;
-  try {
-    const bucket = await program.account.exposureBucket.fetch(bucketAddress);
-    bucketExposure = BigInt(bucket.lockedExposure.toString());
-  } catch {
-    // Bucket PDA is created lazily on first issuance; absent means zero exposure.
-    bucketExposure = 0n;
-  }
+  const bucket = await program.account.exposureBucket.fetchNullable(bucketAddress);
+  const bucketExposure = BigInt(bucket?.lockedExposure.toString() ?? "0");
 
   const book: BookState = {
     vault: VAULT.toBase58(),
@@ -83,13 +90,43 @@ export async function requestQuote(input: QuoteRequestInput): Promise<QuoteResul
     book,
   });
 
+  let policyQuoteHash = quote.quoteHash;
+  let validatedOddsMessageKeyHex: string | null = null;
+  if (REQUIRE_VALIDATED_ODDS && quote.premium !== null) {
+    const messageKey = oddsMessageKey(packet.MessageId);
+    const receiptAddress = validatedOddsPda(messageKey);
+    const receipt = await program.account.validatedOdds.fetch(receiptAddress);
+    if (BigInt(receipt.fixtureId.toString()) !== FIXTURE_ID) throw new Error("validated odds receipt has the wrong fixture");
+    if (Number(receipt.oddsTimestampMs.toString()) !== packet.Ts) throw new Error("validated odds receipt has the wrong timestamp");
+    if (!Buffer.from(receipt.messageIdHash as number[]).equals(oddsMessageHash(packet.MessageId))) {
+      throw new Error("validated odds receipt has the wrong message hash");
+    }
+    if (Date.now() - packet.Ts > 15 * 60 * 1_000 || packet.Ts - Date.now() > 30 * 1_000) {
+      throw new Error("validated odds receipt is outside the on-chain freshness window");
+    }
+    policyQuoteHash = verifiedQuoteHash({
+      vault: VAULT,
+      validatedOdds: receiptAddress,
+      validationReceiptHash: Buffer.from(receipt.validationReceiptHash as number[]),
+      predicateHash: Buffer.from(compiled.hash, "hex"),
+      bucketHash: Buffer.from(bucketHashHex, "hex"),
+      coverage,
+      premium: BigInt(quote.premium),
+      probabilityPpm: quote.probabilityPpm,
+    }).toString("hex");
+    validatedOddsMessageKeyHex = messageKey.toString("hex");
+  }
+
   return {
     predicateText: compiled.canonicalText,
     predicateHash: compiled.hash,
     predicateBytesHex: Buffer.from(compiled.canonicalBytes).toString("hex"),
     predicateLen: compiled.canonicalBytes.length,
     bucketHash: bucketHashHex,
-    quoteHash: quote.quoteHash,
+    quoteHash: policyQuoteHash,
+    auditQuoteHash: quote.quoteHash,
+    validatedOddsMessageKeyHex,
+    validationMode: validatedOddsMessageKeyHex ? "txline-cpi" : "recorded-source",
     verdict: quote.verdict,
     probabilityPpm: quote.probabilityPpm,
     premium: quote.premium,

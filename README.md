@@ -24,8 +24,45 @@ path is shared byte-for-byte with the Gate 4 devnet test. Policies whose fixture
 authentic captured TxLINE proof are refused at settle time rather than settled with
 synthesized data. See `EVIDENCE.md` Gate 7.
 
+## TxLINE validation boundary
+
+The currently deployed program uses TxLINE's `validate_stat_v2` CPI atomically during
+settlement. The original France–Spain pricing policies used authenticated TxLINE SSE
+bytes and deterministic quote hashes; those historical policies did not call
+`validate_odds`.
+
+The source tree now contains an additive proof-backed issuance path for the next live
+fixture:
+
+1. fetch an authentic proof from TxLINE's `/api/odds/validation` endpoint;
+2. CPI into TxLINE `validate_odds` and store a SURETY `ValidatedOdds` receipt;
+3. issue a policy against that receipt while the program checks freshness, matches the
+   proved fixture/outcome, and recomputes the premium from the proved prices and current
+   vault exposure.
+
+This upgrade has been built and unit-tested but is intentionally **not described as
+deployed** until the local-validator suite, program upgrade, authentic CPI receipt, and
+fresh live-fixture issuance have all passed. The existing `issue_policy` instruction and
+demo configuration remain available unchanged. A new proof-required build should use a
+formula-version 2 vault: version 2 rejects the legacy issuance instruction on-chain, so the
+validated path cannot be bypassed by calling the program directly.
+
+The exact existing pricing packet now has a genuine TxLINE odds proof at
+`data/recordings/phase0-18237038-message-000791-odds-proof.raw.json`. TxLINE's deployed
+devnet validator accepts it and rejects a one-bit mutation:
+
+```bash
+ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
+  ANCHOR_WALLET=.secrets/devnet-deployer.json \
+  npm run validate:odds-proof:devnet
+```
+
 Run the Glass Balance Sheet locally with `npm run dev` and open
 `http://localhost:3000`. The production build is checked with `npm run build:web`.
+
+For a separate proof-required live-fixture build, copy `.env.example`, set the fixture
+ID/label and a snapshot filename located under `data/recordings`, then set
+`SURETY_REQUIRE_VALIDATED_ODDS=1`. The default values preserve the audited demo build.
 
 ## Deterministic quote formula
 

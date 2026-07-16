@@ -409,6 +409,187 @@
       ]
     },
     {
+      "name": "issue_policy_with_validated_odds",
+      "discriminator": [
+        33,
+        2,
+        223,
+        63,
+        69,
+        23,
+        49,
+        44
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "asset_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "holder_asset_account",
+          "writable": true
+        },
+        {
+          "name": "bucket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "arg",
+                "path": "args.bucket_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              },
+              {
+                "kind": "arg",
+                "path": "args.predicate_hash"
+              },
+              {
+                "kind": "arg",
+                "path": "args.nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policy_escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121,
+                  95,
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "policy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "validated_odds",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  111,
+                  100,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "validated_odds.message_id_key",
+                "account": "ValidatedOdds"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "IssuePolicyArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "lp_deposit",
       "discriminator": [
         27,
@@ -534,6 +715,87 @@
           "type": {
             "defined": {
               "name": "PostAttestationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "record_validated_odds",
+      "discriminator": [
+        201,
+        220,
+        127,
+        255,
+        48,
+        144,
+        89,
+        100
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "validated_odds",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  111,
+                  100,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "message_id_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "txline_program",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "daily_odds_merkle_roots"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "message_id_key",
+          "type": {
+            "array": [
+              "u8",
+              16
+            ]
+          }
+        },
+        {
+          "name": "proof",
+          "type": {
+            "defined": {
+              "name": "OddsValidationInput"
             }
           }
         }
@@ -786,6 +1048,19 @@
       ]
     },
     {
+      "name": "ValidatedOdds",
+      "discriminator": [
+        193,
+        26,
+        68,
+        95,
+        250,
+        130,
+        40,
+        76
+      ]
+    },
+    {
       "name": "Vault",
       "discriminator": [
         211,
@@ -840,6 +1115,19 @@
       ]
     },
     {
+      "name": "OddsValidated",
+      "discriminator": [
+        220,
+        151,
+        160,
+        221,
+        66,
+        132,
+        25,
+        140
+      ]
+    },
+    {
       "name": "PolicyExpired",
       "discriminator": [
         165,
@@ -863,6 +1151,19 @@
         95,
         231,
         160
+      ]
+    },
+    {
+      "name": "PolicyIssuedWithValidatedOdds",
+      "discriminator": [
+        200,
+        164,
+        24,
+        79,
+        215,
+        35,
+        118,
+        76
       ]
     },
     {
@@ -1113,6 +1414,46 @@
       "code": 6038,
       "name": "InvalidAttestationHash",
       "msg": "attestation record hash does not match its canonical fields"
+    },
+    {
+      "code": 6039,
+      "name": "TxlineOddsRejected",
+      "msg": "TxLINE rejected the odds record or its Merkle proof"
+    },
+    {
+      "code": 6040,
+      "name": "InvalidOddsMarket",
+      "msg": "TxLINE odds record is not a supported full-match 1X2 market"
+    },
+    {
+      "code": 6041,
+      "name": "OddsPolicyMismatch",
+      "msg": "TxLINE odds record does not match the policy fixture or outcome"
+    },
+    {
+      "code": 6042,
+      "name": "OddsMessageHashMismatch",
+      "msg": "odds message ID does not match the receipt PDA hash"
+    },
+    {
+      "code": 6043,
+      "name": "StaleOddsProof",
+      "msg": "TxLINE odds proof is too old or dated too far in the future"
+    },
+    {
+      "code": 6044,
+      "name": "OddsPremiumMismatch",
+      "msg": "policy premium does not match the on-chain calculation from validated odds"
+    },
+    {
+      "code": 6045,
+      "name": "VerifiedQuoteHashMismatch",
+      "msg": "quote hash does not commit to the validated TxLINE proof and policy terms"
+    },
+    {
+      "code": 6046,
+      "name": "ValidatedOddsRequired",
+      "msg": "this vault requires TxLINE-validated odds issuance"
     }
   ],
   "types": [
@@ -1287,6 +1628,212 @@
           {
             "name": "shares",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Odds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "message_id",
+            "type": "string"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "bookmaker",
+            "type": "string"
+          },
+          {
+            "name": "bookmaker_id",
+            "type": "i32"
+          },
+          {
+            "name": "super_odds_type",
+            "type": "string"
+          },
+          {
+            "name": "game_state",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "in_running",
+            "type": "bool"
+          },
+          {
+            "name": "market_parameters",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "market_period",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "price_names",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "prices",
+            "type": {
+              "vec": "i32"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OddsBatchSummary",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "update_stats",
+            "type": {
+              "defined": {
+                "name": "OddsUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "odds_sub_tree_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OddsUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "update_count",
+            "type": "i32"
+          },
+          {
+            "name": "min_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "max_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OddsValidated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "validated_odds",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "odds_timestamp_ms",
+            "type": "i64"
+          },
+          {
+            "name": "message_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "validation_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "prices",
+            "type": {
+              "array": [
+                "i32",
+                3
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OddsValidationInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "odds_snapshot",
+            "type": {
+              "defined": {
+                "name": "Odds"
+              }
+            }
+          },
+          {
+            "name": "summary",
+            "type": {
+              "defined": {
+                "name": "OddsBatchSummary"
+              }
+            }
+          },
+          {
+            "name": "sub_tree_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "main_tree_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
           }
         ]
       }
@@ -1479,6 +2026,56 @@
                 32
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicyIssuedWithValidatedOdds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "validated_odds",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "odds_timestamp_ms",
+            "type": "i64"
+          },
+          {
+            "name": "message_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "validation_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "probability_ppm",
+            "type": "u32"
+          },
+          {
+            "name": "premium",
+            "type": "u64"
           }
         ]
       }
@@ -1851,6 +2448,66 @@
                   "name": "StatLeaf"
                 }
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ValidatedOdds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "odds_timestamp_ms",
+            "type": "i64"
+          },
+          {
+            "name": "message_id_key",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "message_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "validation_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "prices",
+            "type": {
+              "array": [
+                "i32",
+                3
+              ]
             }
           }
         ]

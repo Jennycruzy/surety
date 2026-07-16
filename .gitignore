@@ -8,7 +8,7 @@
 node_modules/
 .next/
 dist/
-coverage/
+/coverage/
 *.tsbuildinfo
 
 # Rust / Anchor

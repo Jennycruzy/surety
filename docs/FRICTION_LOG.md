@@ -116,3 +116,19 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   unused stats from the proof response.
 - **Status:** Gate 4 passed with V2. The documented V3 multiproof is the planned path
   for larger compound settlements; it must be independently verified before use.
+
+## 2026-07-15 — Odds-validation CPI requires a separate receipt transaction
+
+- **Observed:** TxLINE's current OpenAPI documents `GET /api/odds/validation`, and the
+  devnet IDL exposes `validate_odds`. The exact SURETY pricing packet returned a genuine
+  proof and passed the deployed validator. A direct validation transaction serialized to
+  1,119 bytes. Combining that proof with all policy-issuance accounts exceeded Solana's
+  1,232-byte transaction limit.
+- **Impact:** Odds proof validation and policy issuance cannot safely be packed into one
+  legacy transaction for this real 19-node proof.
+- **Resolution:** The additive design uses two real on-chain transactions. The first CPIs
+  into TxLINE and stores a SURETY `ValidatedOdds` receipt; the second consumes the receipt,
+  checks a 15-minute freshness window, matches fixture/outcome, and recomputes premium from
+  current vault state. The two serialized transaction sizes are 1,227 and 702 bytes.
+- **Status:** Source and SBF build pass. Deployment and live-fixture issuance remain pending;
+  the existing demo path has not been replaced.

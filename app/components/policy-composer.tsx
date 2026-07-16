@@ -3,8 +3,8 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { requestQuote, type QuoteResult } from "../lib/quote-action.js";
-import { buildIssuePolicyTx } from "../lib/surety-client.js";
-import { FIXTURE_ID } from "../lib/config.js";
+import { buildIssuePolicyTx, buildIssuePolicyWithValidatedOddsTx } from "../lib/surety-client.js";
+import { FIXTURE_ID, FIXTURE_LABEL } from "../lib/config.js";
 
 type Outcome = "WIN_HOME" | "DRAW" | "WIN_AWAY";
 const OUTCOME_LABEL: Record<Outcome, { merchant: string; prop: string }> = {
@@ -46,7 +46,7 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
     setSubmitting(true);
     try {
       const nonce = BigInt(Date.now());
-      const tx = await buildIssuePolicyTx(connection, {
+      const issueInput = {
         holder: publicKey,
         payoutAuthority: publicKey,
         nonce,
@@ -58,7 +58,13 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
         coverage: BigInt(quote.coverage),
         premium: BigInt(quote.premium!),
         expiresAt: BigInt(Math.floor(Date.now() / 1000) + EXPIRY_SECONDS),
-      });
+      };
+      const tx = quote.validatedOddsMessageKeyHex
+        ? await buildIssuePolicyWithValidatedOddsTx(connection, {
+            ...issueInput,
+            validatedOddsMessageKey: Buffer.from(quote.validatedOddsMessageKeyHex, "hex"),
+          })
+        : await buildIssuePolicyTx(connection, issueInput);
       const { policyPda } = await import("../lib/pda.js");
       const policy = policyPda(publicKey, Buffer.from(quote.predicateHash, "hex"), nonce);
       const latest = await connection.getLatestBlockhash("confirmed");
@@ -82,7 +88,7 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
     <div className="formcard">
       <div className="field">
         <label>Fixture</label>
-        <input value={`${FIXTURE_ID} · France v Spain, semifinal`} disabled />
+        <input value={`${FIXTURE_ID} · ${FIXTURE_LABEL}`} disabled />
       </div>
       <div className="field">
         <label>{skin === "merchant" ? "Outcome to insure against" : "Outcome to back"}</label>
@@ -114,7 +120,7 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
       {!quote && !issued && (
         <div className="actionrow">
           <button className="primary-btn" onClick={getQuote} disabled={quoting}>
-            {quoting ? "Pricing from live odds…" : "Get live quote"}
+            {quoting ? "Pricing from TxLINE odds…" : "Get TxLINE quote"}
           </button>
         </div>
       )}
@@ -128,6 +134,9 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
             <div className="quote-row"><span>Premium</span><strong>{(Number(quote.premium) / 1_000_000).toFixed(2)} tUSDC</strong></div>
           )}
           <div className="quote-row"><span>Quote commitment</span><strong style={{ fontFamily: "monospace", fontSize: 12 }}>{quote.quoteHash.slice(0, 16)}…</strong></div>
+          {quote.validationMode === "txline-cpi" && (
+            <div className="quote-row"><span>Odds integrity</span><strong>TxLINE CPI validated</strong></div>
+          )}
           {quote.verdict === "REJECT" ? (
             <div className="notice">This bucket is at its exposure cap — rejected before any funds move. Try a smaller amount or a different outcome.</div>
           ) : (

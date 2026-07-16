@@ -1,7 +1,7 @@
 "use server";
 
-import { readFile } from "node:fs/promises";
 import { PublicKey } from "@solana/web3.js";
+import authenticFinalProof from "../../data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json" with { type: "json" };
 import { decodePredicate } from "../../services/predicate/src/compiler.js";
 import { settlementPayloadFromProof, type RawV2Proof } from "../../services/settlement/src/v2-payload.js";
 import { loadDeployer } from "./deployer.js";
@@ -11,8 +11,8 @@ import { buildSettlePolicyTx, getProgram, newConnection } from "./surety-client.
 // (written directly from authenticated response bytes and accepted by TxLINE's deployed
 // devnet validator at Gate 4). SURETY never fabricates proof bytes, so a fixture that is
 // not listed here simply cannot be settled yet — see docs/GROUND_TRUTH.md.
-const CAPTURED_PROOFS: Record<string, string> = {
-  "18218149": "data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json",
+const CAPTURED_PROOFS: Record<string, RawV2Proof> = {
+  "18218149": authenticFinalProof as RawV2Proof,
 };
 
 function policyFixtureId(policy: { predicateBytes: number[]; predicateLen: number }): string {
@@ -57,8 +57,8 @@ export async function settlePolicy(policyAddress: string): Promise<SettleResult>
     predicateBytes: policy.predicateBytes as number[],
     predicateLen: policy.predicateLen as number,
   });
-  const proofPath = CAPTURED_PROOFS[fixtureId];
-  if (!proofPath) {
+  const proof = CAPTURED_PROOFS[fixtureId];
+  if (!proof) {
     return {
       settled: false,
       reason:
@@ -68,7 +68,6 @@ export async function settlePolicy(policyAddress: string): Promise<SettleResult>
     };
   }
 
-  const proof = JSON.parse(await readFile(proofPath, "utf8")) as RawV2Proof;
   const payload = settlementPayloadFromProof(proof);
   const caller = loadDeployer();
 

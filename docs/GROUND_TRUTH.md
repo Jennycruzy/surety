@@ -194,8 +194,32 @@ placeholder bytes rather than genuine hash output — see `docs/FRICTION_LOG.md`
 | `data/recordings/phase0-18237038-odds.raw.sse` | 289,212 | `5676364ca687377c3cccd33abe265da8edc6caa600f261f1f790e6fe56f70c23` |
 | `data/recordings/phase0-18237038-scores-snapshot.raw.json` | 40,958 | `07e26845527ed6acfc8229b27aa932411cafd468253d259a93758f504a89861b` |
 | `data/recordings/phase0-18237038-odds-snapshot.raw.json` | 9,029 | `bedb9df15f9fdce7c0ee5178bba0fc5bdd3c21e46c5b9ea3775b626458763434` |
+| `data/recordings/phase0-18237038-message-000791-odds-proof.raw.json` | 3,453 | `98a580777e4ab036bad4c67f77884b422483123090d09eefa6bfd6c6d1ebb143` |
 | `data/recordings/phase0-18218149-historical.raw.json` | 1,101,803 | `2b3080034d82d9200a05a70dd5c3f42090b628294df9e210986d1ab4be4a01c0` |
 | `data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json` | 3,862 | `491a0a0ebc3b9502e5d4fba837a4276f6cda0c28d4617c511562a3d9f4b5dc87` |
+
+### Authentic odds-proof verification
+
+On 2026-07-15 the exact full-match 1X2 record selected by the quote engine was submitted
+to TxLINE devnet's documented endpoint:
+
+```text
+GET /api/odds/validation
+messageId=1837782566:00003:000791-10021-stab
+ts=1784056509431
+```
+
+The authenticated response was preserved byte-for-byte in the odds-proof artifact above.
+It contains 11 fixture-subtree proof nodes and 8 main-tree proof nodes. A read-only
+simulation of TxLINE devnet program
+`6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J` returned `true` from `validate_odds`
+against daily root PDA `9CrnWb2ZBtxX3B2C7GUDacb8AnjvySjyDtci7uy4gdoH`. Flipping one bit in the first proof
+node caused validation to fail.
+
+This proves the recorded pricing packet is genuinely contained in TxLINE's on-chain
+commitment. It does not retroactively change the historical policies, which were issued
+before SURETY's additive validated-odds receipt path existed. The new source path must not
+be called deployed until its separate deployment and end-to-end evidence are complete.
 
 Exact raw odds event captured from the live stream:
 

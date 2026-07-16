@@ -16,6 +16,7 @@ import {
   policyPda,
   reservePda,
   shareMintPda,
+  validatedOddsPda,
   withdrawalPda,
   withdrawalSharesPda,
 } from "./pda.js";
@@ -112,6 +113,45 @@ export async function buildIssuePolicyTx(connection: Connection, input: IssuePol
     .preInstructions([ensureHolderAta])
     .transaction();
   return tx;
+}
+
+export async function buildIssuePolicyWithValidatedOddsTx(
+  connection: Connection,
+  input: IssuePolicyInput & { validatedOddsMessageKey: Buffer },
+): Promise<Transaction> {
+  const program = getProgram(connection, { publicKey: input.holder });
+  const padded = Buffer.alloc(32);
+  input.predicateBytes.copy(padded);
+  const policy = policyPda(input.holder, input.predicateHash, input.nonce);
+  const { ata: holderAssetAccount, instruction: ensureHolderAta } = ensureAtaIx(input.holder, input.holder);
+  return program.methods
+    .issuePolicyWithValidatedOdds({
+      nonce: new BN(input.nonce.toString()),
+      predicateLen: input.predicateLen,
+      predicateBytes: [...padded],
+      predicateHash: [...input.predicateHash],
+      quoteHash: [...input.quoteHash],
+      bucketHash: [...input.bucketHash],
+      payoutAuthority: input.payoutAuthority,
+      coverage: new BN(input.coverage.toString()),
+      premium: new BN(input.premium.toString()),
+      expiresAt: new BN(input.expiresAt.toString()),
+    })
+    .accountsStrict({
+      holder: input.holder,
+      vault: VAULT,
+      assetMint: ASSET_MINT,
+      reserve: reservePda(),
+      holderAssetAccount,
+      bucket: bucketPda(input.bucketHash),
+      policy,
+      policyEscrow: policyEscrowPda(policy),
+      validatedOdds: validatedOddsPda(input.validatedOddsMessageKey),
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .preInstructions([ensureHolderAta])
+    .transaction();
 }
 
 export type LpDepositInput = { lp: PublicKey; assets: bigint };
@@ -218,16 +258,18 @@ export async function buildSettlePolicyTx(connection: Connection, input: SettleP
   // All vault-scoped accounts derive from the policy's own vault field, so this settles
   // any policy on any SURETY vault — not just the app's default showcase vault.
   const vault = new PublicKey(policy.vault as PublicKey);
+  const vaultState = await program.account.vault.fetch(vault);
+  const assetMint = new PublicKey(vaultState.assetMint as PublicKey);
   const bucketHash = Buffer.from(policy.bucketHash as number[]);
   const payoutAuthority = new PublicKey(policy.payoutAuthority as PublicKey);
-  const { ata: payoutAccount, instruction: ensurePayoutAta } = ensureAtaIx(input.caller, payoutAuthority, ASSET_MINT);
+  const { ata: payoutAccount, instruction: ensurePayoutAta } = ensureAtaIx(input.caller, payoutAuthority, assetMint);
   const proofTs = Number((input.payload as { ts: { toString(): string } }).ts.toString());
   return program.methods
     .settlePolicy(input.payload)
     .accountsStrict({
       caller: input.caller,
       vault,
-      assetMint: ASSET_MINT,
+      assetMint,
       reserve: reservePda(vault),
       bucket: bucketPda(bucketHash, vault),
       policy: input.policyAddress,

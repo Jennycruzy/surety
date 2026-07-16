@@ -7,7 +7,9 @@ pub const PROGRAM_ID: Pubkey = Pubkey::new_from_array([
     63, 122, 36, 191, 62, 218, 248, 127, 119, 80, 3,
 ]);
 pub const VALIDATE_STAT_V2_DISCRIMINATOR: [u8; 8] = [208, 215, 194, 214, 241, 71, 246, 178];
+pub const VALIDATE_ODDS_DISCRIMINATOR: [u8; 8] = [192, 19, 91, 138, 104, 100, 212, 86];
 pub const DAILY_SCORES_SEED: &[u8] = b"daily_scores_roots";
+pub const DAILY_ODDS_SEED: &[u8] = b"daily_batch_roots";
 pub const MILLIS_PER_DAY: i64 = 86_400_000;
 pub const FINAL_PERIOD: i32 = 100;
 
@@ -15,6 +17,44 @@ pub const FINAL_PERIOD: i32 = 100;
 pub struct ProofNode {
     pub hash: [u8; 32],
     pub is_right_sibling: bool,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Odds {
+    pub fixture_id: i64,
+    pub message_id: String,
+    pub ts: i64,
+    pub bookmaker: String,
+    pub bookmaker_id: i32,
+    pub super_odds_type: String,
+    pub game_state: Option<String>,
+    pub in_running: bool,
+    pub market_parameters: Option<String>,
+    pub market_period: Option<String>,
+    pub price_names: Vec<String>,
+    pub prices: Vec<i32>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct OddsUpdateStats {
+    pub update_count: i32,
+    pub min_timestamp: i64,
+    pub max_timestamp: i64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct OddsBatchSummary {
+    pub fixture_id: i64,
+    pub update_stats: OddsUpdateStats,
+    pub odds_sub_tree_root: [u8; 32],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct OddsValidationInput {
+    pub odds_snapshot: Odds,
+    pub summary: OddsBatchSummary,
+    pub sub_tree_proof: Vec<ProofNode>,
+    pub main_tree_proof: Vec<ProofNode>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
@@ -104,4 +144,13 @@ pub struct NDimensionalStrategy {
 pub struct ValidateStatV2Args<'a> {
     pub payload: &'a StatValidationInput,
     pub strategy: &'a NDimensionalStrategy,
+}
+
+#[derive(AnchorSerialize)]
+pub struct ValidateOddsArgs<'a> {
+    pub ts: i64,
+    pub odds_snapshot: &'a Odds,
+    pub summary: &'a OddsBatchSummary,
+    pub sub_tree_proof: &'a Vec<ProofNode>,
+    pub main_tree_proof: &'a Vec<ProofNode>,
 }

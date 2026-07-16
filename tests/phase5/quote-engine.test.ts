@@ -3,6 +3,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
+import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
+import { oddsMessageKey } from "../../services/odds-validation/src/txline.js";
+import { validatedOddsPda } from "../../app/lib/pda.js";
+import { VAULT } from "../../app/lib/surety-client.js";
 import {
   auditQuote,
   computeQuote,
@@ -82,4 +86,22 @@ test("quote hash changes when packet, book, or coverage changes", () => {
     computeQuote({ ...request, packet: { ...packet, Ts: packet.Ts + 1 } }).quoteHash,
     original.quoteHash,
   );
+});
+
+test("verified quote commitment matches the Rust on-chain test vector", () => {
+  const validatedOdds = validatedOddsPda(
+    oddsMessageKey("1837782566:00003:000791-10021-stab"),
+  );
+  const commitment = verifiedQuoteHash({
+    vault: VAULT,
+    validatedOdds,
+    validationReceiptHash: Buffer.alloc(32, 4),
+    predicateHash: Buffer.from(predicateHash, "hex"),
+    bucketHash: Buffer.from(bucketHash, "hex"),
+    coverage: 50_000_000n,
+    premium: 26_940_150n,
+    probabilityPpm: 359_202,
+  });
+  assert.equal(validatedOdds.toBase58(), "24Fkoixd9C1sFFmkknWmu5N52MyV5cwpPs29aAN8AUJG");
+  assert.equal(commitment.toString("hex"), "69c335c848cdc202c310f08f2fa87299e56cf0873d9e1712ac0d47609470d779");
 });

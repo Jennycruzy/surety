@@ -12,8 +12,8 @@ use solana_sha256_hasher::hash;
 
 mod txline;
 use txline::{
-    BinaryExpression, Comparison, NDimensionalStrategy, StatPredicate, StatValidationInput,
-    TraderPredicate,
+    BinaryExpression, Comparison, NDimensionalStrategy, OddsValidationInput, StatPredicate,
+    StatValidationInput, TraderPredicate,
 };
 
 declare_id!("3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW");
@@ -24,7 +24,10 @@ const MAX_PREDICATE_BYTES: usize = 32;
 const BPS_DENOMINATOR: u128 = 10_000;
 const MAX_TXLINE_PROOF_NODES: usize = 32;
 const MAX_SETTLEMENT_STATS: usize = 4;
+const MAX_ODDS_AGE_MS: i64 = 15 * 60 * 1_000;
+const MAX_ODDS_FUTURE_SKEW_MS: i64 = 30 * 1_000;
 const ATTESTATION_DOMAIN: &[u8] = b"SURETY_ATTESTATION_V1";
+const VERIFIED_QUOTE_DOMAIN: &[u8] = b"SURETY_TXLINE_ODDS_QUOTE_V1";
 
 #[program]
 pub mod surety_core {
@@ -241,111 +244,104 @@ pub mod surety_core {
     }
 
     pub fn issue_policy(ctx: Context<IssuePolicy>, args: IssuePolicyArgs) -> Result<()> {
-        require!(args.coverage > 0, SuretyError::ZeroCoverage);
-        require!(args.premium > 0, SuretyError::ZeroPremium);
         require!(
-            args.predicate_len > 0 && usize::from(args.predicate_len) <= MAX_PREDICATE_BYTES,
-            SuretyError::InvalidPredicate
+            ctx.accounts.vault.formula_version == 1,
+            SuretyError::ValidatedOddsRequired
         );
-        require!(
-            args.expires_at > Clock::get()?.unix_timestamp,
-            SuretyError::InvalidExpiry
-        );
-        require!(
-            hash(&args.predicate_bytes[..usize::from(args.predicate_len)]).to_bytes()
-                == args.predicate_hash,
-            SuretyError::PredicateHashMismatch
-        );
-
-        let vault = &mut ctx.accounts.vault;
-        reconcile_reserve(vault, ctx.accounts.reserve.amount)?;
-        require!(vault.total_capital > 0, SuretyError::EmptyVault);
-        require!(
-            vault
-                .free_reserves
-                .checked_add(args.premium)
-                .ok_or(SuretyError::MathOverflow)?
-                >= args.coverage,
-            SuretyError::InsufficientFreeReserves
-        );
-
-        let bucket = &mut ctx.accounts.bucket;
-        if bucket.vault == Pubkey::default() {
-            bucket.vault = vault.key();
-            bucket.bucket_hash = args.bucket_hash;
-            bucket.locked_exposure = 0;
-            bucket.open_policy_count = 0;
-            bucket.bump = ctx.bumps.bucket;
-        }
-        let new_bucket_exposure = checked_add(bucket.locked_exposure, args.coverage)?;
-        let bucket_cap = bucket_cap(vault.total_capital, vault.max_bucket_bps)?;
-        require!(
-            new_bucket_exposure <= bucket_cap,
-            SuretyError::BucketCapExceeded
-        );
-
-        transfer_tokens(
-            &ctx.accounts.token_program,
+        issue_policy_core(
+            &ctx.accounts.holder,
+            &mut ctx.accounts.vault,
             &ctx.accounts.asset_mint,
+            &mut ctx.accounts.reserve,
             &ctx.accounts.holder_asset_account,
-            &ctx.accounts.reserve,
-            &ctx.accounts.holder.to_account_info(),
-            args.premium,
-            None,
-        )?;
-
-        let vault_id = vault.vault_id;
-        let vault_bump = [vault.bump];
-        let vault_seeds: &[&[u8]] = &[b"vault", vault_id.as_ref(), &vault_bump];
-        transfer_tokens(
-            &ctx.accounts.token_program,
-            &ctx.accounts.asset_mint,
-            &ctx.accounts.reserve,
+            &mut ctx.accounts.bucket,
+            &mut ctx.accounts.policy,
             &ctx.accounts.policy_escrow,
-            &vault.to_account_info(),
-            args.coverage,
-            Some(vault_seeds),
+            &ctx.accounts.token_program,
+            ctx.bumps.bucket,
+            ctx.bumps.policy,
+            &args,
+        )
+    }
+
+    pub fn record_validated_odds(
+        ctx: Context<RecordValidatedOdds>,
+        message_id_key: [u8; 16],
+        proof: OddsValidationInput,
+    ) -> Result<()> {
+        let message_id_hash = hash(proof.odds_snapshot.message_id.as_bytes()).to_bytes();
+        require!(
+            message_id_hash[..16] == message_id_key,
+            SuretyError::OddsMessageHashMismatch
+        );
+        let validation_receipt_hash = validate_txline_odds(
+            &ctx.accounts.txline_program,
+            &ctx.accounts.daily_odds_merkle_roots,
+            &proof,
         )?;
 
-        let policy = &mut ctx.accounts.policy;
-        policy.version = POLICY_VERSION;
-        policy.status = PolicyStatus::Open;
-        policy.bump = ctx.bumps.policy;
-        policy.predicate_len = args.predicate_len;
-        policy.vault = vault.key();
-        policy.holder = ctx.accounts.holder.key();
-        policy.payout_authority = args.payout_authority;
-        policy.bucket = bucket.key();
-        policy.escrow = ctx.accounts.policy_escrow.key();
-        policy.predicate_hash = args.predicate_hash;
-        policy.quote_hash = args.quote_hash;
-        policy.bucket_hash = args.bucket_hash;
-        policy.merkle_receipt_hash = [0; 32];
-        policy.predicate_bytes = args.predicate_bytes;
-        policy.nonce = args.nonce;
-        policy.coverage = args.coverage;
-        policy.premium = args.premium;
-        policy.expires_at = args.expires_at;
-        policy.created_at = Clock::get()?.unix_timestamp;
+        let receipt = &mut ctx.accounts.validated_odds;
+        receipt.version = 1;
+        receipt.bump = ctx.bumps.validated_odds;
+        receipt.fixture_id = proof.odds_snapshot.fixture_id;
+        receipt.odds_timestamp_ms = proof.odds_snapshot.ts;
+        receipt.message_id_key = message_id_key;
+        receipt.message_id_hash = message_id_hash;
+        receipt.validation_receipt_hash = validation_receipt_hash;
+        receipt.prices = proof
+            .odds_snapshot
+            .prices
+            .as_slice()
+            .try_into()
+            .map_err(|_| error!(SuretyError::InvalidOddsMarket))?;
 
-        vault.total_capital = checked_add(vault.total_capital, args.premium)?;
-        vault.free_reserves = checked_add(vault.free_reserves, args.premium)?;
-        vault.free_reserves = checked_sub(vault.free_reserves, args.coverage)?;
-        vault.locked_liabilities = checked_add(vault.locked_liabilities, args.coverage)?;
-        vault.policy_count = checked_add(vault.policy_count, 1)?;
-        bucket.locked_exposure = new_bucket_exposure;
-        bucket.open_policy_count = checked_add(bucket.open_policy_count, 1)?;
-        assert_accounting_invariant(vault)?;
+        emit!(OddsValidated {
+            validated_odds: receipt.key(),
+            fixture_id: receipt.fixture_id,
+            odds_timestamp_ms: receipt.odds_timestamp_ms,
+            message_id_hash: receipt.message_id_hash,
+            validation_receipt_hash: receipt.validation_receipt_hash,
+            prices: receipt.prices,
+        });
+        Ok(())
+    }
 
-        emit!(PolicyIssued {
-            vault: vault.key(),
-            policy: policy.key(),
-            holder: policy.holder,
-            coverage: policy.coverage,
-            premium: policy.premium,
-            predicate_hash: policy.predicate_hash,
-            quote_hash: policy.quote_hash,
-            bucket_hash: policy.bucket_hash,
+    pub fn issue_policy_with_validated_odds(
+        ctx: Context<IssuePolicyWithValidatedOdds>,
+        args: IssuePolicyArgs,
+    ) -> Result<()> {
+        reconcile_reserve(&mut ctx.accounts.vault, ctx.accounts.reserve.amount)?;
+        let probability_ppm = validate_verified_quote(
+            &ctx.accounts.vault,
+            &ctx.accounts.bucket,
+            &ctx.accounts.validated_odds,
+            &args,
+        )?;
+
+        issue_policy_core(
+            &ctx.accounts.holder,
+            &mut ctx.accounts.vault,
+            &ctx.accounts.asset_mint,
+            &mut ctx.accounts.reserve,
+            &ctx.accounts.holder_asset_account,
+            &mut ctx.accounts.bucket,
+            &mut ctx.accounts.policy,
+            &ctx.accounts.policy_escrow,
+            &ctx.accounts.token_program,
+            ctx.bumps.bucket,
+            ctx.bumps.policy,
+            &args,
+        )?;
+
+        emit!(PolicyIssuedWithValidatedOdds {
+            policy: ctx.accounts.policy.key(),
+            validated_odds: ctx.accounts.validated_odds.key(),
+            fixture_id: ctx.accounts.validated_odds.fixture_id,
+            odds_timestamp_ms: ctx.accounts.validated_odds.odds_timestamp_ms,
+            message_id_hash: ctx.accounts.validated_odds.message_id_hash,
+            validation_receipt_hash: ctx.accounts.validated_odds.validation_receipt_hash,
+            probability_ppm,
+            premium: args.premium,
         });
         Ok(())
     }
@@ -771,6 +767,80 @@ pub struct IssuePolicy<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(message_id_key: [u8; 16], proof: OddsValidationInput)]
+pub struct RecordValidatedOdds<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        init,
+        payer = payer,
+        space = 8 + ValidatedOdds::INIT_SPACE,
+        seeds = [b"validated_odds", message_id_key.as_ref()],
+        bump
+    )]
+    pub validated_odds: Box<Account<'info, ValidatedOdds>>,
+    /// CHECK: fixed to TxLINE's executable devnet program.
+    #[account(address = txline::PROGRAM_ID, executable)]
+    pub txline_program: UncheckedAccount<'info>,
+    /// CHECK: exact PDA and TxLINE ownership are verified before CPI.
+    pub daily_odds_merkle_roots: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(args: IssuePolicyArgs)]
+pub struct IssuePolicyWithValidatedOdds<'info> {
+    #[account(mut)]
+    pub holder: Signer<'info>,
+    #[account(mut, has_one = asset_mint, has_one = reserve)]
+    pub vault: Box<Account<'info, Vault>>,
+    pub asset_mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(mut, token::mint = asset_mint, token::authority = vault)]
+    pub reserve: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(mut, token::mint = asset_mint, token::authority = holder)]
+    pub holder_asset_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        init_if_needed,
+        payer = holder,
+        space = 8 + ExposureBucket::INIT_SPACE,
+        seeds = [b"bucket", vault.key().as_ref(), args.bucket_hash.as_ref()],
+        bump
+    )]
+    pub bucket: Box<Account<'info, ExposureBucket>>,
+    #[account(
+        init,
+        payer = holder,
+        space = 8 + Policy::INIT_SPACE,
+        seeds = [
+            b"policy",
+            vault.key().as_ref(),
+            holder.key().as_ref(),
+            args.predicate_hash.as_ref(),
+            args.nonce.to_le_bytes().as_ref()
+        ],
+        bump
+    )]
+    pub policy: Box<Account<'info, Policy>>,
+    #[account(
+        init,
+        payer = holder,
+        seeds = [b"policy_escrow", policy.key().as_ref()],
+        bump,
+        token::mint = asset_mint,
+        token::authority = policy,
+        token::token_program = token_program
+    )]
+    pub policy_escrow: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        seeds = [b"validated_odds", validated_odds.message_id_key.as_ref()],
+        bump = validated_odds.bump
+    )]
+    pub validated_odds: Box<Account<'info, ValidatedOdds>>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct ExpirePolicy<'info> {
     pub caller: Signer<'info>,
     #[account(mut, has_one = asset_mint, has_one = reserve)]
@@ -888,6 +958,19 @@ pub struct Policy {
 
 #[account]
 #[derive(InitSpace)]
+pub struct ValidatedOdds {
+    pub version: u8,
+    pub bump: u8,
+    pub fixture_id: i64,
+    pub odds_timestamp_ms: i64,
+    pub message_id_key: [u8; 16],
+    pub message_id_hash: [u8; 32],
+    pub validation_receipt_hash: [u8; 32],
+    pub prices: [i32; 3],
+}
+
+#[account]
+#[derive(InitSpace)]
 pub struct WithdrawalRequest {
     pub vault: Pubkey,
     pub lp: Pubkey,
@@ -995,6 +1078,28 @@ pub struct PolicySettled {
 }
 
 #[event]
+pub struct OddsValidated {
+    pub validated_odds: Pubkey,
+    pub fixture_id: i64,
+    pub odds_timestamp_ms: i64,
+    pub message_id_hash: [u8; 32],
+    pub validation_receipt_hash: [u8; 32],
+    pub prices: [i32; 3],
+}
+
+#[event]
+pub struct PolicyIssuedWithValidatedOdds {
+    pub policy: Pubkey,
+    pub validated_odds: Pubkey,
+    pub fixture_id: i64,
+    pub odds_timestamp_ms: i64,
+    pub message_id_hash: [u8; 32],
+    pub validation_receipt_hash: [u8; 32],
+    pub probability_ppm: u32,
+    pub premium: u64,
+}
+
+#[event]
 pub struct AttestationPosted {
     pub vault: Pubkey,
     pub attestation: Pubkey,
@@ -1086,6 +1191,408 @@ pub enum SuretyError {
     InvalidSolvencyRatio,
     #[msg("attestation record hash does not match its canonical fields")]
     InvalidAttestationHash,
+    #[msg("TxLINE rejected the odds record or its Merkle proof")]
+    TxlineOddsRejected,
+    #[msg("TxLINE odds record is not a supported full-match 1X2 market")]
+    InvalidOddsMarket,
+    #[msg("TxLINE odds record does not match the policy fixture or outcome")]
+    OddsPolicyMismatch,
+    #[msg("odds message ID does not match the receipt PDA hash")]
+    OddsMessageHashMismatch,
+    #[msg("TxLINE odds proof is too old or dated too far in the future")]
+    StaleOddsProof,
+    #[msg("policy premium does not match the on-chain calculation from validated odds")]
+    OddsPremiumMismatch,
+    #[msg("quote hash does not commit to the validated TxLINE proof and policy terms")]
+    VerifiedQuoteHashMismatch,
+    #[msg("this vault requires TxLINE-validated odds issuance")]
+    ValidatedOddsRequired,
+}
+
+#[allow(clippy::too_many_arguments)]
+fn issue_policy_core<'info>(
+    holder: &Signer<'info>,
+    vault: &mut Account<'info, Vault>,
+    asset_mint: &InterfaceAccount<'info, Mint>,
+    reserve: &mut InterfaceAccount<'info, TokenAccount>,
+    holder_asset_account: &InterfaceAccount<'info, TokenAccount>,
+    bucket: &mut Account<'info, ExposureBucket>,
+    policy: &mut Account<'info, Policy>,
+    policy_escrow: &InterfaceAccount<'info, TokenAccount>,
+    token_program: &Interface<'info, TokenInterface>,
+    bucket_bump: u8,
+    policy_bump: u8,
+    args: &IssuePolicyArgs,
+) -> Result<()> {
+    require!(args.coverage > 0, SuretyError::ZeroCoverage);
+    require!(args.premium > 0, SuretyError::ZeroPremium);
+    require!(
+        args.predicate_len > 0 && usize::from(args.predicate_len) <= MAX_PREDICATE_BYTES,
+        SuretyError::InvalidPredicate
+    );
+    require!(
+        args.expires_at > Clock::get()?.unix_timestamp,
+        SuretyError::InvalidExpiry
+    );
+    require!(
+        hash(&args.predicate_bytes[..usize::from(args.predicate_len)]).to_bytes()
+            == args.predicate_hash,
+        SuretyError::PredicateHashMismatch
+    );
+
+    reconcile_reserve(vault, reserve.amount)?;
+    require!(vault.total_capital > 0, SuretyError::EmptyVault);
+    require!(
+        vault
+            .free_reserves
+            .checked_add(args.premium)
+            .ok_or(SuretyError::MathOverflow)?
+            >= args.coverage,
+        SuretyError::InsufficientFreeReserves
+    );
+
+    if bucket.vault == Pubkey::default() {
+        bucket.vault = vault.key();
+        bucket.bucket_hash = args.bucket_hash;
+        bucket.locked_exposure = 0;
+        bucket.open_policy_count = 0;
+        bucket.bump = bucket_bump;
+    }
+    let new_bucket_exposure = checked_add(bucket.locked_exposure, args.coverage)?;
+    let cap = bucket_cap(vault.total_capital, vault.max_bucket_bps)?;
+    require!(new_bucket_exposure <= cap, SuretyError::BucketCapExceeded);
+
+    transfer_tokens(
+        token_program,
+        asset_mint,
+        holder_asset_account,
+        reserve,
+        &holder.to_account_info(),
+        args.premium,
+        None,
+    )?;
+
+    let vault_id = vault.vault_id;
+    let vault_bump = [vault.bump];
+    let vault_seeds: &[&[u8]] = &[b"vault", vault_id.as_ref(), &vault_bump];
+    transfer_tokens(
+        token_program,
+        asset_mint,
+        reserve,
+        policy_escrow,
+        &vault.to_account_info(),
+        args.coverage,
+        Some(vault_seeds),
+    )?;
+
+    policy.version = POLICY_VERSION;
+    policy.status = PolicyStatus::Open;
+    policy.bump = policy_bump;
+    policy.predicate_len = args.predicate_len;
+    policy.vault = vault.key();
+    policy.holder = holder.key();
+    policy.payout_authority = args.payout_authority;
+    policy.bucket = bucket.key();
+    policy.escrow = policy_escrow.key();
+    policy.predicate_hash = args.predicate_hash;
+    policy.quote_hash = args.quote_hash;
+    policy.bucket_hash = args.bucket_hash;
+    policy.merkle_receipt_hash = [0; 32];
+    policy.predicate_bytes = args.predicate_bytes;
+    policy.nonce = args.nonce;
+    policy.coverage = args.coverage;
+    policy.premium = args.premium;
+    policy.expires_at = args.expires_at;
+    policy.created_at = Clock::get()?.unix_timestamp;
+
+    vault.total_capital = checked_add(vault.total_capital, args.premium)?;
+    vault.free_reserves = checked_add(vault.free_reserves, args.premium)?;
+    vault.free_reserves = checked_sub(vault.free_reserves, args.coverage)?;
+    vault.locked_liabilities = checked_add(vault.locked_liabilities, args.coverage)?;
+    vault.policy_count = checked_add(vault.policy_count, 1)?;
+    bucket.locked_exposure = new_bucket_exposure;
+    bucket.open_policy_count = checked_add(bucket.open_policy_count, 1)?;
+    assert_accounting_invariant(vault)?;
+
+    emit!(PolicyIssued {
+        vault: vault.key(),
+        policy: policy.key(),
+        holder: policy.holder,
+        coverage: policy.coverage,
+        premium: policy.premium,
+        predicate_hash: policy.predicate_hash,
+        quote_hash: policy.quote_hash,
+        bucket_hash: policy.bucket_hash,
+    });
+    Ok(())
+}
+
+fn validate_txline_odds<'info>(
+    txline_program: &UncheckedAccount<'info>,
+    daily_odds_merkle_roots: &UncheckedAccount<'info>,
+    proof: &OddsValidationInput,
+) -> Result<[u8; 32]> {
+    let odds = &proof.odds_snapshot;
+    require!(
+        proof.sub_tree_proof.len() <= MAX_TXLINE_PROOF_NODES
+            && proof.main_tree_proof.len() <= MAX_TXLINE_PROOF_NODES,
+        SuretyError::TxlineProofTooLarge
+    );
+    require!(
+        odds.fixture_id > 0
+            && odds.fixture_id == proof.summary.fixture_id
+            && proof.summary.update_stats.min_timestamp <= odds.ts
+            && odds.ts <= proof.summary.update_stats.max_timestamp,
+        SuretyError::InvalidOddsMarket
+    );
+    require!(
+        odds.bookmaker == "TXLineStablePriceDemargined"
+            && odds.super_odds_type == "1X2_PARTICIPANT_RESULT"
+            && odds.market_parameters.is_none()
+            && odds.market_period.is_none()
+            && odds.price_names.len() == 3
+            && odds.price_names[0] == "part1"
+            && odds.price_names[1] == "draw"
+            && odds.price_names[2] == "part2"
+            && odds.prices.len() == 3
+            && odds.prices.iter().all(|price| *price > 0),
+        SuretyError::InvalidOddsMarket
+    );
+
+    let expected_root = daily_odds_root(odds.ts)?;
+    require_keys_eq!(
+        daily_odds_merkle_roots.key(),
+        expected_root,
+        SuretyError::InvalidTxlineRoot
+    );
+    require_keys_eq!(
+        *daily_odds_merkle_roots.owner,
+        txline::PROGRAM_ID,
+        SuretyError::InvalidTxlineRoot
+    );
+
+    let mut cpi_data = txline::VALIDATE_ODDS_DISCRIMINATOR.to_vec();
+    txline::ValidateOddsArgs {
+        ts: odds.ts,
+        odds_snapshot: odds,
+        summary: &proof.summary,
+        sub_tree_proof: &proof.sub_tree_proof,
+        main_tree_proof: &proof.main_tree_proof,
+    }
+    .serialize(&mut cpi_data)
+    .map_err(|_| error!(SuretyError::TxlineSerializationFailed))?;
+    let validation_receipt_hash = hash(&cpi_data).to_bytes();
+    let validation_ix = Instruction {
+        program_id: txline::PROGRAM_ID,
+        accounts: vec![AccountMeta::new_readonly(expected_root, false)],
+        data: cpi_data,
+    };
+    invoke(
+        &validation_ix,
+        &[
+            daily_odds_merkle_roots.to_account_info(),
+            txline_program.to_account_info(),
+        ],
+    )?;
+    let (return_program, return_bytes) =
+        get_return_data().ok_or_else(|| error!(SuretyError::MissingTxlineReturnData))?;
+    require_keys_eq!(
+        return_program,
+        txline::PROGRAM_ID,
+        SuretyError::InvalidTxlineReturnProgram
+    );
+    require!(
+        return_bytes.as_slice() == [1u8],
+        SuretyError::TxlineOddsRejected
+    );
+    Ok(validation_receipt_hash)
+}
+
+fn validate_verified_quote(
+    vault: &Account<Vault>,
+    bucket: &Account<ExposureBucket>,
+    validated_odds: &Account<ValidatedOdds>,
+    args: &IssuePolicyArgs,
+) -> Result<u32> {
+    require!(
+        matches!(vault.formula_version, 1 | 2),
+        SuretyError::InvalidFormulaVersion
+    );
+    let now_ms = Clock::get()?
+        .unix_timestamp
+        .checked_mul(1_000)
+        .ok_or(SuretyError::MathOverflow)?;
+    let oldest = now_ms
+        .checked_sub(MAX_ODDS_AGE_MS)
+        .ok_or(SuretyError::MathUnderflow)?;
+    let newest = now_ms
+        .checked_add(MAX_ODDS_FUTURE_SKEW_MS)
+        .ok_or(SuretyError::MathOverflow)?;
+    require!(
+        validated_odds.odds_timestamp_ms >= oldest && validated_odds.odds_timestamp_ms <= newest,
+        SuretyError::StaleOddsProof
+    );
+
+    let outcome_index = policy_outcome_index(args, validated_odds.fixture_id)?;
+    let current_exposure = if bucket.vault == Pubkey::default() {
+        0
+    } else {
+        bucket.locked_exposure
+    };
+    let (probability_ppm, premium) = validated_quote_terms(
+        vault.total_capital,
+        vault.max_bucket_bps,
+        current_exposure,
+        args.coverage,
+        vault.margin_bps,
+        validated_odds.prices,
+        outcome_index,
+    )?;
+    require!(args.premium == premium, SuretyError::OddsPremiumMismatch);
+
+    let expected_quote_hash = verified_quote_hash(
+        vault.key(),
+        validated_odds.key(),
+        probability_ppm,
+        args,
+        validated_odds.validation_receipt_hash,
+    );
+    require!(
+        args.quote_hash == expected_quote_hash,
+        SuretyError::VerifiedQuoteHashMismatch
+    );
+    Ok(probability_ppm)
+}
+
+fn validated_quote_terms(
+    total_capital: u64,
+    max_bucket_bps: u16,
+    current_exposure: u64,
+    coverage: u64,
+    margin_bps: u16,
+    prices: [i32; 3],
+    outcome_index: usize,
+) -> Result<(u32, u64)> {
+    let probability_ppm = normalized_probability_ppm(prices, outcome_index)?;
+    let cap = bucket_cap(total_capital, max_bucket_bps)?;
+    let projected_exposure = checked_add(current_exposure, coverage)?;
+    require!(projected_exposure < cap, SuretyError::BucketCapExceeded);
+    let utilization_bps = ceil_div_u128(
+        u128::from(projected_exposure) * BPS_DENOMINATOR,
+        u128::from(cap),
+    )?;
+    let surcharge_bps = if utilization_bps < 4_000 {
+        10_000
+    } else {
+        10_000u128
+            .checked_add(
+                utilization_bps
+                    .checked_sub(4_000)
+                    .ok_or(SuretyError::MathUnderflow)?
+                    .checked_mul(10_000)
+                    .ok_or(SuretyError::MathOverflow)?
+                    / 6_000,
+            )
+            .ok_or(SuretyError::MathOverflow)?
+    };
+    let premium_numerator = u128::from(coverage)
+        .checked_mul(u128::from(probability_ppm))
+        .and_then(|value| value.checked_mul(u128::from(margin_bps)))
+        .and_then(|value| value.checked_mul(surcharge_bps))
+        .ok_or(SuretyError::MathOverflow)?;
+    let premium = ceil_div_u128(
+        premium_numerator,
+        1_000_000u128 * BPS_DENOMINATOR * BPS_DENOMINATOR,
+    )?;
+    let premium = u64::try_from(premium).map_err(|_| error!(SuretyError::MathOverflow))?;
+    Ok((probability_ppm, premium))
+}
+
+fn policy_outcome_index(args: &IssuePolicyArgs, fixture_id: i64) -> Result<usize> {
+    let length = usize::from(args.predicate_len);
+    require!(length == 17, SuretyError::OddsPolicyMismatch);
+    let bytes = &args.predicate_bytes[..length];
+    require!(
+        bytes[0] == 1
+            && bytes[1] == 1
+            && bytes[2] == 2
+            && bytes[11] == 0
+            && bytes[12] == 0
+            && bytes[14..17] == [0, 0, 0],
+        SuretyError::OddsPolicyMismatch
+    );
+    let policy_fixture = u64::from_le_bytes(
+        bytes[3..11]
+            .try_into()
+            .map_err(|_| error!(SuretyError::OddsPolicyMismatch))?,
+    );
+    require!(
+        i64::try_from(policy_fixture).ok() == Some(fixture_id),
+        SuretyError::OddsPolicyMismatch
+    );
+    match bytes[13] {
+        0 => Ok(0),
+        1 => Ok(1),
+        2 => Ok(2),
+        _ => err!(SuretyError::OddsPolicyMismatch),
+    }
+}
+
+fn normalized_probability_ppm(prices: [i32; 3], outcome_index: usize) -> Result<u32> {
+    require!(
+        prices.iter().all(|price| *price > 0),
+        SuretyError::InvalidOddsMarket
+    );
+    require!(outcome_index < 3, SuretyError::OddsPolicyMismatch);
+    let prices = prices.map(|price| u128::from(u32::try_from(price).unwrap()));
+    let weights = [
+        prices[1].checked_mul(prices[2]),
+        prices[0].checked_mul(prices[2]),
+        prices[0].checked_mul(prices[1]),
+    ];
+    let weights = [
+        weights[0].ok_or(SuretyError::MathOverflow)?,
+        weights[1].ok_or(SuretyError::MathOverflow)?,
+        weights[2].ok_or(SuretyError::MathOverflow)?,
+    ];
+    let total = weights
+        .iter()
+        .try_fold(0u128, |sum, weight| sum.checked_add(*weight))
+        .ok_or(SuretyError::MathOverflow)?;
+    let rounded = weights[outcome_index]
+        .checked_mul(1_000_000)
+        .and_then(|value| value.checked_add(total / 2))
+        .ok_or(SuretyError::MathOverflow)?
+        / total;
+    u32::try_from(rounded).map_err(|_| error!(SuretyError::MathOverflow))
+}
+
+fn ceil_div_u128(numerator: u128, denominator: u128) -> Result<u128> {
+    require!(denominator > 0, SuretyError::MathUnderflow);
+    numerator
+        .checked_add(denominator - 1)
+        .ok_or_else(|| error!(SuretyError::MathOverflow))
+        .map(|value| value / denominator)
+}
+
+fn verified_quote_hash(
+    vault: Pubkey,
+    validated_odds: Pubkey,
+    probability_ppm: u32,
+    args: &IssuePolicyArgs,
+    validation_receipt_hash: [u8; 32],
+) -> [u8; 32] {
+    let mut bytes = Vec::with_capacity(VERIFIED_QUOTE_DOMAIN.len() + 32 * 6 + 8 * 3 + 4);
+    bytes.extend_from_slice(VERIFIED_QUOTE_DOMAIN);
+    bytes.extend_from_slice(vault.as_ref());
+    bytes.extend_from_slice(validated_odds.as_ref());
+    bytes.extend_from_slice(&validation_receipt_hash);
+    bytes.extend_from_slice(&args.predicate_hash);
+    bytes.extend_from_slice(&args.bucket_hash);
+    bytes.extend_from_slice(&args.coverage.to_le_bytes());
+    bytes.extend_from_slice(&args.premium.to_le_bytes());
+    bytes.extend_from_slice(&probability_ppm.to_le_bytes());
+    hash(&bytes).to_bytes()
 }
 
 fn transfer_tokens<'info>(
@@ -1218,6 +1725,20 @@ fn daily_scores_root(timestamp_ms: i64) -> Result<Pubkey> {
         u16::try_from(epoch_day).map_err(|_| error!(SuretyError::InvalidProofTimestamp))?;
     Ok(Pubkey::find_program_address(
         &[txline::DAILY_SCORES_SEED, &epoch_day.to_le_bytes()],
+        &txline::PROGRAM_ID,
+    )
+    .0)
+}
+
+fn daily_odds_root(timestamp_ms: i64) -> Result<Pubkey> {
+    require!(timestamp_ms >= 0, SuretyError::InvalidProofTimestamp);
+    let epoch_day = timestamp_ms
+        .checked_div(txline::MILLIS_PER_DAY)
+        .ok_or(SuretyError::InvalidProofTimestamp)?;
+    let epoch_day =
+        u16::try_from(epoch_day).map_err(|_| error!(SuretyError::InvalidProofTimestamp))?;
+    Ok(Pubkey::find_program_address(
+        &[txline::DAILY_ODDS_SEED, &epoch_day.to_le_bytes()],
         &txline::PROGRAM_ID,
     )
     .0)
@@ -1395,6 +1916,7 @@ fn attestation_hash(args: &PostAttestationArgs) -> [u8; 32] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     fn final_payload(keys: &[u32]) -> StatValidationInput {
         StatValidationInput {
@@ -1470,5 +1992,94 @@ mod tests {
         let mut in_running = final_payload(&[1, 2]);
         in_running.stats[0].stat.period = 1;
         assert!(strategy_for_policy(&canonical, &in_running).is_err());
+    }
+
+    #[test]
+    fn authentic_txline_prices_normalize_exactly() {
+        // Exact full-match 1X2 prices from authentic fixture 18237038 message
+        // 1837782566:00003:000791-10021-stab.
+        let prices = [2784, 2968, 3291];
+        assert_eq!(normalized_probability_ppm(prices, 0).unwrap(), 359_202);
+        assert_eq!(normalized_probability_ppm(prices, 1).unwrap(), 336_933);
+        assert_eq!(normalized_probability_ppm(prices, 2).unwrap(), 303_865);
+        assert_eq!(
+            validated_quote_terms(1_000_000_000, 2_000, 0, 50_000_000, 15_000, prices, 0).unwrap(),
+            (359_202, 26_940_150)
+        );
+        assert!(validated_quote_terms(
+            1_000_000_000,
+            2_000,
+            150_000_000,
+            50_000_000,
+            15_000,
+            prices,
+            0,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validated_odds_must_match_the_policy_fixture_and_outcome() {
+        let fixture_id = 18_237_038i64;
+        let mut predicate_bytes = [0u8; MAX_PREDICATE_BYTES];
+        predicate_bytes[0] = 1;
+        predicate_bytes[1] = 1;
+        predicate_bytes[2] = 2;
+        predicate_bytes[3..11].copy_from_slice(&(fixture_id as u64).to_le_bytes());
+        predicate_bytes[13] = 2;
+        let args = IssuePolicyArgs {
+            nonce: 1,
+            predicate_len: 17,
+            predicate_bytes,
+            predicate_hash: hash(&predicate_bytes[..17]).to_bytes(),
+            quote_hash: [0; 32],
+            bucket_hash: [1; 32],
+            payout_authority: Pubkey::new_unique(),
+            coverage: 100_000_000,
+            premium: 1,
+            expires_at: i64::MAX,
+        };
+        assert_eq!(policy_outcome_index(&args, fixture_id).unwrap(), 2);
+        assert!(policy_outcome_index(&args, fixture_id + 1).is_err());
+    }
+
+    #[test]
+    fn verified_quote_hash_matches_the_typescript_vector() {
+        let fixture_id = 18_237_038u64;
+        let mut predicate_bytes = [0u8; MAX_PREDICATE_BYTES];
+        predicate_bytes[0] = 1;
+        predicate_bytes[1] = 1;
+        predicate_bytes[2] = 2;
+        predicate_bytes[3..11].copy_from_slice(&fixture_id.to_le_bytes());
+        let predicate_hash = hash(&predicate_bytes[..17]).to_bytes();
+        let bucket_hash = hash(b"match:18237038:WIN_HOME").to_bytes();
+        let args = IssuePolicyArgs {
+            nonce: 1,
+            predicate_len: 17,
+            predicate_bytes,
+            predicate_hash,
+            quote_hash: [0; 32],
+            bucket_hash,
+            payout_authority: Pubkey::new_unique(),
+            coverage: 50_000_000,
+            premium: 26_940_150,
+            expires_at: i64::MAX,
+        };
+        let message_hash = hash(b"1837782566:00003:000791-10021-stab").to_bytes();
+        let validated_odds =
+            Pubkey::find_program_address(&[b"validated_odds", &message_hash[..16]], &crate::ID).0;
+        assert_eq!(
+            verified_quote_hash(
+                Pubkey::from_str("CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC").unwrap(),
+                validated_odds,
+                359_202,
+                &args,
+                [4; 32],
+            ),
+            [
+                105, 195, 53, 200, 72, 205, 194, 2, 195, 16, 240, 143, 47, 168, 114, 153, 229, 108,
+                240, 135, 61, 158, 23, 18, 172, 13, 71, 96, 148, 112, 215, 121,
+            ]
+        );
     }
 }

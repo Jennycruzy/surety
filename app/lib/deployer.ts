@@ -11,7 +11,12 @@ import { Keypair } from "@solana/web3.js";
 // back to the .secrets file.
 export function loadDeployer(): Keypair {
   const inline = process.env.SURETY_DEPLOYER_SECRET;
+  if (inline) return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(inline) as number[]));
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SURETY_DEPLOYER_SECRET is required in production");
+  }
   const path = process.env.SURETY_DEPLOYER_SECRET_PATH ?? ".secrets/devnet-deployer.json";
-  const bytes = inline ? (JSON.parse(inline) as number[]) : (JSON.parse(readFileSync(path, "utf8")) as number[]);
+  // Local-only secret path: never trace or bundle this file into a production build.
+  const bytes = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8")) as number[];
   return Keypair.fromSecretKey(Uint8Array.from(bytes));
 }

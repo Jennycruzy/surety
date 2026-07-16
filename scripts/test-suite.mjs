@@ -4,7 +4,13 @@ const group = process.argv[2] ?? "all";
 const groups = {
   grammar: ["tests/phase2/grammar.test.ts"],
   phase1: ["tests/phase1/sse.test.ts"],
-  all: ["tests/phase1/sse.test.ts", "tests/phase2/grammar.test.ts"],
+  all: [
+    "tests/phase1/sse.test.ts",
+    "tests/phase2/grammar.test.ts",
+    "tests/phase5/odds-validation.test.ts",
+    "tests/phase5/quote-engine.test.ts",
+    "tests/phase6/marker.test.ts",
+  ],
 };
 
 if (!(group in groups)) {

@@ -18,10 +18,10 @@ const context = await browser.newContext({
 const page = await context.newPage();
 
 await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-await page.waitForTimeout(17000); // full replay cycle incl. the goal (records 6->10)
+await page.waitForTimeout(25000); // full replay cycle incl. the goal (records 6->10)
 
 await page.goto(`${BASE}/policy/${DEMO_POLICY}`, { waitUntil: "networkidle" });
-await page.waitForTimeout(6000);
+await page.waitForTimeout(8000); // total recorded page time is at least 33 seconds
 
 const video = page.video();
 await context.close();

@@ -415,6 +415,187 @@ export type SuretyCore = {
       ]
     },
     {
+      "name": "issuePolicyWithValidatedOdds",
+      "discriminator": [
+        33,
+        2,
+        223,
+        63,
+        69,
+        23,
+        49,
+        44
+      ],
+      "accounts": [
+        {
+          "name": "holder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "assetMint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "reserve",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "holderAssetAccount",
+          "writable": true
+        },
+        {
+          "name": "bucket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "arg",
+                "path": "args.bucket_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              },
+              {
+                "kind": "arg",
+                "path": "args.predicate_hash"
+              },
+              {
+                "kind": "arg",
+                "path": "args.nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policyEscrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121,
+                  95,
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "policy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "validatedOdds",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  111,
+                  100,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "validated_odds.message_id_key",
+                "account": "validatedOdds"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "issuePolicyArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "lpDeposit",
       "discriminator": [
         27,
@@ -540,6 +721,87 @@ export type SuretyCore = {
           "type": {
             "defined": {
               "name": "postAttestationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "recordValidatedOdds",
+      "discriminator": [
+        201,
+        220,
+        127,
+        255,
+        48,
+        144,
+        89,
+        100
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "validatedOdds",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  111,
+                  100,
+                  100,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "messageIdKey"
+              }
+            ]
+          }
+        },
+        {
+          "name": "txlineProgram",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "dailyOddsMerkleRoots"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "messageIdKey",
+          "type": {
+            "array": [
+              "u8",
+              16
+            ]
+          }
+        },
+        {
+          "name": "proof",
+          "type": {
+            "defined": {
+              "name": "oddsValidationInput"
             }
           }
         }
@@ -792,6 +1054,19 @@ export type SuretyCore = {
       ]
     },
     {
+      "name": "validatedOdds",
+      "discriminator": [
+        193,
+        26,
+        68,
+        95,
+        250,
+        130,
+        40,
+        76
+      ]
+    },
+    {
       "name": "vault",
       "discriminator": [
         211,
@@ -846,6 +1121,19 @@ export type SuretyCore = {
       ]
     },
     {
+      "name": "oddsValidated",
+      "discriminator": [
+        220,
+        151,
+        160,
+        221,
+        66,
+        132,
+        25,
+        140
+      ]
+    },
+    {
       "name": "policyExpired",
       "discriminator": [
         165,
@@ -869,6 +1157,19 @@ export type SuretyCore = {
         95,
         231,
         160
+      ]
+    },
+    {
+      "name": "policyIssuedWithValidatedOdds",
+      "discriminator": [
+        200,
+        164,
+        24,
+        79,
+        215,
+        35,
+        118,
+        76
       ]
     },
     {
@@ -1119,6 +1420,46 @@ export type SuretyCore = {
       "code": 6038,
       "name": "invalidAttestationHash",
       "msg": "attestation record hash does not match its canonical fields"
+    },
+    {
+      "code": 6039,
+      "name": "txlineOddsRejected",
+      "msg": "TxLINE rejected the odds record or its Merkle proof"
+    },
+    {
+      "code": 6040,
+      "name": "invalidOddsMarket",
+      "msg": "TxLINE odds record is not a supported full-match 1X2 market"
+    },
+    {
+      "code": 6041,
+      "name": "oddsPolicyMismatch",
+      "msg": "TxLINE odds record does not match the policy fixture or outcome"
+    },
+    {
+      "code": 6042,
+      "name": "oddsMessageHashMismatch",
+      "msg": "odds message ID does not match the receipt PDA hash"
+    },
+    {
+      "code": 6043,
+      "name": "staleOddsProof",
+      "msg": "TxLINE odds proof is too old or dated too far in the future"
+    },
+    {
+      "code": 6044,
+      "name": "oddsPremiumMismatch",
+      "msg": "policy premium does not match the on-chain calculation from validated odds"
+    },
+    {
+      "code": 6045,
+      "name": "verifiedQuoteHashMismatch",
+      "msg": "quote hash does not commit to the validated TxLINE proof and policy terms"
+    },
+    {
+      "code": 6046,
+      "name": "validatedOddsRequired",
+      "msg": "this vault requires TxLINE-validated odds issuance"
     }
   ],
   "types": [
@@ -1293,6 +1634,212 @@ export type SuretyCore = {
           {
             "name": "shares",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "odds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "messageId",
+            "type": "string"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "bookmaker",
+            "type": "string"
+          },
+          {
+            "name": "bookmakerId",
+            "type": "i32"
+          },
+          {
+            "name": "superOddsType",
+            "type": "string"
+          },
+          {
+            "name": "gameState",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "inRunning",
+            "type": "bool"
+          },
+          {
+            "name": "marketParameters",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "marketPeriod",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "priceNames",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "prices",
+            "type": {
+              "vec": "i32"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "oddsBatchSummary",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "updateStats",
+            "type": {
+              "defined": {
+                "name": "oddsUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "oddsSubTreeRoot",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "oddsUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "updateCount",
+            "type": "i32"
+          },
+          {
+            "name": "minTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "maxTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "oddsValidated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "validatedOdds",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "oddsTimestampMs",
+            "type": "i64"
+          },
+          {
+            "name": "messageIdHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "validationReceiptHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "prices",
+            "type": {
+              "array": [
+                "i32",
+                3
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "oddsValidationInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "oddsSnapshot",
+            "type": {
+              "defined": {
+                "name": "odds"
+              }
+            }
+          },
+          {
+            "name": "summary",
+            "type": {
+              "defined": {
+                "name": "oddsBatchSummary"
+              }
+            }
+          },
+          {
+            "name": "subTreeProof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "proofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "mainTreeProof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "proofNode"
+                }
+              }
+            }
           }
         ]
       }
@@ -1485,6 +2032,56 @@ export type SuretyCore = {
                 32
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "policyIssuedWithValidatedOdds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "validatedOdds",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "oddsTimestampMs",
+            "type": "i64"
+          },
+          {
+            "name": "messageIdHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "validationReceiptHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "probabilityPpm",
+            "type": "u32"
+          },
+          {
+            "name": "premium",
+            "type": "u64"
           }
         ]
       }
@@ -1857,6 +2454,66 @@ export type SuretyCore = {
                   "name": "statLeaf"
                 }
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "validatedOdds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "oddsTimestampMs",
+            "type": "i64"
+          },
+          {
+            "name": "messageIdKey",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "messageIdHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "validationReceiptHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "prices",
+            "type": {
+              "array": [
+                "i32",
+                3
+              ]
             }
           }
         ]

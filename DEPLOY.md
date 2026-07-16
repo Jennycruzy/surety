@@ -34,9 +34,27 @@ for `npm run dev`.
 2. From the repo root: `vercel` (accept defaults; framework auto-detected as Next.js).
 3. In the Vercel project → Settings → Environment Variables, add `SURETY_DEPLOYER_SECRET`
    (the JSON byte array). Optionally set it only for Production/Preview.
-4. `vercel --prod` to promote. The build runs `next build`; `next.config.ts` already traces
-   the authentic capture files (`data/recordings/**`, `data/attestations-gate6.jsonl`,
-   `target/idl/**`) into the serverless functions.
+4. `vercel --prod` to promote. The build runs `next build`; `next.config.ts` traces only
+   the odds-snapshot files, authentic settlement proof, attestation chain, and SURETY IDL
+   needed by the server functions.
+
+The default environment preserves the audited France–Spain build. To deploy a separate
+live-fixture build after its TxLINE odds receipt is recorded, also set:
+
+```text
+NEXT_PUBLIC_SURETY_FIXTURE_ID=<fixture id>
+NEXT_PUBLIC_SURETY_FIXTURE_LABEL=<display label>
+NEXT_PUBLIC_SURETY_VAULT=<formula-version 2 vault>
+NEXT_PUBLIC_SURETY_ASSET_MINT=<that vault's test-token mint>
+SURETY_ODDS_SNAPSHOT_FILE=<filename under data/recordings>
+SURETY_REQUIRE_VALIDATED_ODDS=1
+```
+
+Do not enable `SURETY_REQUIRE_VALIDATED_ODDS` until that exact packet has passed TxLINE
+`validate_odds` and its SURETY `ValidatedOdds` receipt exists on the deployed program. Use
+a formula-version 2 vault for the proof-required build; version 2 disables the legacy
+issuance instruction at the program level, while the existing version 1 demo vault remains
+backward compatible.
 
 Wallet-signed flows (buy coverage, LP deposit/withdraw) work in the deployed app with any
 Wallet-Standard wallet (Phantom, Solflare, Backpack) set to **Devnet**. The dashboard and

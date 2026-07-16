@@ -16,7 +16,7 @@ export default function Nav({ active }: { active: "dashboard" | "coverage" | "pr
     setStatus(null);
     try {
       const result = await fundTestUsdc(publicKey.toBase58());
-      setStatus(`+500 tUSDC · ${result.signature.slice(0, 8)}…`);
+      setStatus(`+${(Number(result.amount) / 1_000_000).toLocaleString()} tUSDC · ${result.signature.slice(0, 8)}…`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "faucet failed");
     } finally {
