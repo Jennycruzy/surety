@@ -31,21 +31,19 @@ settlement. The original France–Spain pricing policies used authenticated TxLI
 bytes and deterministic quote hashes; those historical policies did not call
 `validate_odds`.
 
-The source tree now contains an additive proof-backed issuance path for the next live
-fixture:
+The deployed devnet program now contains a proof-backed issuance path for live fixtures:
 
-1. fetch an authentic proof from TxLINE's `/api/odds/validation` endpoint;
-2. CPI into TxLINE `validate_odds` and store a SURETY `ValidatedOdds` receipt;
-3. issue a policy against that receipt while the program checks freshness, matches the
+1. prove fixture identity once through `/api/fixtures/validation` and `validate_fixture`;
+2. fetch renewable price proofs from `/api/odds/validation`;
+3. CPI into TxLINE `validate_odds` and store a SURETY `ValidatedOdds` receipt;
+4. issue a policy against both receipts while the program checks freshness, matches the
    proved fixture/outcome, and recomputes the premium from the proved prices and current
    vault exposure.
 
-This upgrade has been built and unit-tested but is intentionally **not described as
-deployed** until the local-validator suite, program upgrade, authentic CPI receipt, and
-fresh live-fixture issuance have all passed. The existing `issue_policy` instruction and
-demo configuration remain available unchanged. A new proof-required build should use a
-formula-version 2 vault: version 2 rejects the legacy issuance instruction on-chain, so the
-validated path cannot be bypassed by calling the program directly.
+This path was deployed and exercised on devnet for France–England fixture `18257865`.
+Formula-version 2 rejects the legacy issuance instruction on-chain, binds the exposure
+bucket to the proved fixture/outcome, and requires both TxLINE receipts. The existing
+formula-version 1 demo vaults remain backward compatible.
 
 The exact existing pricing packet now has a genuine TxLINE odds proof at
 `data/recordings/phase0-18237038-message-000791-odds-proof.raw.json`. TxLINE's deployed
@@ -61,8 +59,11 @@ Run the Glass Balance Sheet locally with `npm run dev` and open
 `http://localhost:3000`. The production build is checked with `npm run build:web`.
 
 For a separate proof-required live-fixture build, copy `.env.example`, set the fixture
-ID/label and a snapshot filename located under `data/recordings`, then set
-`SURETY_REQUIRE_VALIDATED_ODDS=1`. The default values preserve the audited demo build.
+ID/label, formula-v2 vault, API/deployer credentials, then set
+`SURETY_REQUIRE_VALIDATED_ODDS=1`. In that mode the quote server synchronizes the latest
+authenticated TxLINE packet on demand. `npm run keeper:odds -- --fixture <id>` additionally
+polls every 60 seconds and creates a receipt only when TxLINE publishes a new message.
+The default values preserve the historical France–Spain demo build.
 
 ## Deterministic quote formula
 

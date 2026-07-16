@@ -197,6 +197,9 @@ placeholder bytes rather than genuine hash output — see `docs/FRICTION_LOG.md`
 | `data/recordings/phase0-18237038-message-000791-odds-proof.raw.json` | 3,453 | `98a580777e4ab036bad4c67f77884b422483123090d09eefa6bfd6c6d1ebb143` |
 | `data/recordings/phase0-18218149-historical.raw.json` | 1,101,803 | `2b3080034d82d9200a05a70dd5c3f42090b628294df9e210986d1ab4be4a01c0` |
 | `data/recordings/phase0-18218149-seq1087-final-proof-v2.raw.json` | 3,862 | `491a0a0ebc3b9502e5d4fba837a4276f6cda0c28d4617c511562a3d9f4b5dc87` |
+| `data/recordings/txline-18257865-1784149200000-fixture-proof.raw.json` | 1,642 | `9d934e74663ba195b3f49f3274d16f2fd3db99616d2b8a74e6375653e5fd3bac` |
+| `data/recordings/txline-18257865-1784184414520-odds-snapshot.raw.json` | 13,035 | `f349036e47fef4180a173ef6761aa42ff53c5228300db80feacb5e908fbf187c` |
+| `data/recordings/txline-18257865-1784184414520-odds-proof.raw.json` | 2,289 | `dadf4db03fc985a72ab5e851cdf16f8a450c9b89345bc090f2cadefcf376111d` |
 
 ### Authentic odds-proof verification
 
@@ -218,8 +221,12 @@ node caused validation to fail.
 
 This proves the recorded pricing packet is genuinely contained in TxLINE's on-chain
 commitment. It does not retroactively change the historical policies, which were issued
-before SURETY's additive validated-odds receipt path existed. The new source path must not
-be called deployed until its separate deployment and end-to-end evidence are complete.
+before SURETY's validated-odds receipt path existed.
+
+On 2026-07-16 the complete path was repeated for France–England fixture `18257865` using
+both `validate_fixture` and `validate_odds`, then exercised through SURETY's deployed CPI
+instructions and formula-v2 issuance. The fixture, snapshot, and proof bytes used by the
+issued policy are pinned in the table above; transaction evidence is in `EVIDENCE.md`.
 
 Exact raw odds event captured from the live stream:
 

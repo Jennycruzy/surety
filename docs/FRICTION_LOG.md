@@ -130,5 +130,28 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   into TxLINE and stores a SURETY `ValidatedOdds` receipt; the second consumes the receipt,
   checks a 15-minute freshness window, matches fixture/outcome, and recomputes premium from
   current vault state. The two serialized transaction sizes are 1,227 and 702 bytes.
-- **Status:** Source and SBF build pass. Deployment and live-fixture issuance remain pending;
-  the existing demo path has not been replaced.
+- **Status:** Resolved on 2026-07-16. Fixture, odds, and issuance transactions measured
+  750, 1,095, and 735 bytes in the cloned-program local lifecycle; the deployed live proof
+  varied to 963 bytes according to its Merkle path.
+
+## 2026-07-16 — Live Merkle levels can legitimately be empty
+
+- **Observed:** A fresh TxLINE odds validation response contained an empty subtree-proof
+  vector because its record was already the subtree root. TxLINE's on-chain validator and
+  SURETY's Rust bounds accepted this shape, but the initial TypeScript guard required at
+  least one node.
+- **Impact:** The first deployed keeper tick rejected a genuine proof before CPI.
+- **Resolution:** Off-chain guards now cap proof lengths without requiring a non-empty
+  level; cryptographic validity remains exclusively decided by TxLINE `validate_odds`.
+- **Status:** Fixed, regression-tested, and followed by a successful deployed keeper CPI.
+
+## 2026-07-16 — Exposure bucket must be derived on-chain
+
+- **Observed:** The initial validated quote committed to a caller-provided bucket hash but
+  did not recompute that hash from the proved fixture and predicate outcome.
+- **Impact:** A direct caller could have selected a fresh bucket per policy and bypassed the
+  per-outcome exposure cap even though each individual quote hash was internally consistent.
+- **Resolution:** `issue_policy_with_validated_odds` now derives
+  `sha256("match:<fixture>:<outcome>")` on-chain and rejects any other bucket. The local
+  lifecycle submits the former attack and verifies atomic rejection.
+- **Status:** Fixed before devnet deployment.

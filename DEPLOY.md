@@ -46,15 +46,25 @@ NEXT_PUBLIC_SURETY_FIXTURE_ID=<fixture id>
 NEXT_PUBLIC_SURETY_FIXTURE_LABEL=<display label>
 NEXT_PUBLIC_SURETY_VAULT=<formula-version 2 vault>
 NEXT_PUBLIC_SURETY_ASSET_MINT=<that vault's test-token mint>
-SURETY_ODDS_SNAPSHOT_FILE=<filename under data/recordings>
+TXLINE_API_TOKEN=<TxLINE API token>
 SURETY_REQUIRE_VALIDATED_ODDS=1
 ```
 
-Do not enable `SURETY_REQUIRE_VALIDATED_ODDS` until that exact packet has passed TxLINE
-`validate_odds` and its SURETY `ValidatedOdds` receipt exists on the deployed program. Use
-a formula-version 2 vault for the proof-required build; version 2 disables the legacy
-issuance instruction at the program level, while the existing version 1 demo vault remains
-backward compatible.
+Validated mode fetches the latest authenticated snapshot and synchronizes its SURETY
+receipt on demand. `npm run keeper:odds -- --fixture <id>` can run as a separate 60-second
+worker. Use a formula-version 2 vault; version 2 disables legacy issuance, requires both a
+fixture receipt and fresh odds receipt, and binds the exposure bucket on-chain. The existing
+version 1 demo vault remains backward compatible.
+
+The exercised France–England devnet configuration is:
+
+```text
+NEXT_PUBLIC_SURETY_FIXTURE_ID=18257865
+NEXT_PUBLIC_SURETY_FIXTURE_LABEL=France v England
+NEXT_PUBLIC_SURETY_VAULT=9npibs7NyjhgWrG5muCFbLRCDoVxMiWWEfp2yMXhUNyF
+NEXT_PUBLIC_SURETY_ASSET_MINT=FiJfrnLoc2vZmjixZqCEBuWd8A5EuDaF9MZZhd96bpck
+SURETY_REQUIRE_VALIDATED_ODDS=1
+```
 
 Wallet-signed flows (buy coverage, LP deposit/withdraw) work in the deployed app with any
 Wallet-Standard wallet (Phantom, Solflare, Backpack) set to **Devnet**. The dashboard and

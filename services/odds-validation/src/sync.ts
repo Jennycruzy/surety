@@ -1,5 +1,5 @@
-import { AnchorProvider, Wallet } from "@anchor-lang/core";
-import type { Connection, Keypair, Transaction } from "@solana/web3.js";
+import { AnchorProvider } from "@anchor-lang/core";
+import { Transaction, VersionedTransaction, type Connection, type Keypair } from "@solana/web3.js";
 import { loadDeployer } from "../../../app/lib/deployer.js";
 import { validatedFixturePda } from "../../../app/lib/pda.js";
 import { getProgram, newConnection } from "../../../app/lib/surety-client.js";
@@ -40,7 +40,22 @@ async function submit(connection: Connection, payer: Keypair, transaction: Trans
 export async function syncValidatedMarket(fixtureId: bigint, options: SyncOptions = {}) {
   const connection = options.connection ?? newConnection();
   const payer = options.payer ?? loadDeployer();
-  const txlineProvider = new AnchorProvider(connection, new Wallet(payer), { commitment: "confirmed" });
+  const signingWallet = {
+    publicKey: payer.publicKey,
+    signTransaction: async <T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> => {
+      if (transaction instanceof Transaction) transaction.partialSign(payer);
+      else transaction.sign([payer]);
+      return transaction;
+    },
+    signAllTransactions: async <T extends Transaction | VersionedTransaction>(transactions: T[]): Promise<T[]> => {
+      for (const transaction of transactions) {
+        if (transaction instanceof Transaction) transaction.partialSign(payer);
+        else transaction.sign([payer]);
+      }
+      return transactions;
+    },
+  };
+  const txlineProvider = new AnchorProvider(connection, signingWallet, { commitment: "confirmed" });
   const program = getProgram(connection, { publicKey: payer.publicKey });
   const session = await createTxlineSession();
   const fixtureAddress = validatedFixturePda(fixtureId);

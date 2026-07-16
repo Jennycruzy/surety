@@ -5,7 +5,7 @@ type StoredCredentials = { apiToken: string };
 export async function loadApiToken(): Promise<string> {
   if (process.env.TXLINE_API_TOKEN) return process.env.TXLINE_API_TOKEN;
   const secretPath = process.env.TXLINE_SECRET_PATH ?? ".secrets/txline-devnet.json";
-  const stored = JSON.parse(await readFile(secretPath, "utf8")) as StoredCredentials;
+  const stored = JSON.parse(await readFile(/* turbopackIgnore: true */ secretPath, "utf8")) as StoredCredentials;
   if (!stored.apiToken) throw new Error(`Missing apiToken in ${secretPath}`);
   return stored.apiToken;
 }

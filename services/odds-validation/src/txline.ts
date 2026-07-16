@@ -225,8 +225,10 @@ export function assertAuthenticProofShape(proof: RawOddsValidation): void {
     "odds timestamp is outside its batch summary",
   );
   assertBytes32("oddsSubTreeRoot", proof.summary.oddsSubTreeRoot);
-  assert(proof.subTreeProof.length > 0 && proof.subTreeProof.length <= 32, "invalid odds subtree proof length");
-  assert(proof.mainTreeProof.length > 0 && proof.mainTreeProof.length <= 32, "invalid odds main-tree proof length");
+  // A proof vector may be empty when the committed leaf is already the relevant
+  // subtree/root. TxLINE's on-chain validator decides validity; we only cap size here.
+  assert(proof.subTreeProof.length <= 32, "invalid odds subtree proof length");
+  assert(proof.mainTreeProof.length <= 32, "invalid odds main-tree proof length");
   for (const [group, nodes] of [["subTreeProof", proof.subTreeProof], ["mainTreeProof", proof.mainTreeProof]] as const) {
     nodes.forEach((node, index) => assertBytes32(`${group}[${index}].hash`, node.hash));
   }

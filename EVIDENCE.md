@@ -328,7 +328,7 @@ tokens with no relation to Circle USDC.
   the wallet-signed buy-coverage flow, which a headless capture cannot drive). A scene-by-
   scene script is in `DEMO_SCRIPT.md`.
 
-## Additive TxLINE odds validation — IN PROGRESS, NOT DEPLOYED
+## TxLINE fixture + odds validation — DEPLOYED AND EXERCISED
 
 - PASS — TxLINE devnet returned an authentic `/api/odds/validation` response for the exact
   full-match 1X2 packet used by pricing: fixture `18237038`, message
@@ -337,17 +337,26 @@ tokens with no relation to Circle USDC.
   `98a580777e4ab036bad4c67f77884b422483123090d09eefa6bfd6c6d1ebb143`.
 - PASS — TxLINE's deployed devnet `validate_odds` returned `true` against root PDA
   `9CrnWb2ZBtxX3B2C7GUDacb8AnjvySjyDtci7uy4gdoH`; changing one proof bit was rejected.
-- PASS — The additive SURETY source builds to SBF SHA-256
-  `918932e4593c04f3b188d6ee40a73c0b0f26d734855471a3314a457607f9845c`. Rust tests cover
-  the authentic prices, fixture/outcome binding, and a cross-language quote-hash vector.
-  TypeScript tests use the same vector.
-- PASS — Real proof sizing forced a two-transaction design: `record_validated_odds` is
-  1,227 bytes and `issue_policy_with_validated_odds` is 702 bytes. The first performs the
-  TxLINE CPI and stores a receipt; the second enforces a 15-minute freshness window and
-  recomputes premium from the proved prices and current vault exposure.
-- PENDING — local-validator lifecycle rerun, deployment, SURETY CPI receipt transaction,
-  and issuance from a fresh live-match receipt. The production app defaults to the existing
-  audited flow until `SURETY_REQUIRE_VALIDATED_ODDS=1` is explicitly configured.
+- PASS — The final SURETY source builds to a 666,136-byte SBF binary with SHA-256
+  `5cc17fc68c6f4a88b181873a0d191c048375fba4c69dac878d0d0a074a49d0b0`. A dump of the
+  upgraded 670,384-byte program-data allocation at slot `476613238` matches all 666,136
+  binary bytes exactly; the allocation remainder is zero padding. Upgrade transaction:
+  `57Ufs9apeuCuFNxozw9QWy2747GivU4sxx79Ft7RTEXXnebP4tMtCjQoqmaz8o1DimqwNK6bTjwmH5NReDRM726P`.
+- PASS — The official TxLINE `validate_fixture` CPI recorded France–England fixture
+  `18257865` at receipt `5gYE…uaNh` in transaction
+  `2GsWtfUUwtQQ1ZawGivJKmB5NQ2svzgz3cQUmHt4NA84U19MkRPuabEbbgmQf7LjLtSKAu3emuuU2RfeLZksaeEw`.
+- PASS — The cloned-program local lifecycle performed fixture CPI → odds CPI → issuance.
+  Wire sizes were 750, 1,095, and 735 bytes. It also proved that formula-v2 rejects legacy
+  issuance and that an attacker-chosen bucket hash cannot split exposure around the cap.
+- PASS — The deployed keeper recorded fresh message
+  `1837990857:00003:000134-10021-stab` at `5D9X…Bufg` in transaction
+  `5hJg9Tj16TXscQ7ZsJAAE3DNQEVkW8afF5kxzzYschLNwZkwPCyPQxMqEwPSKFaYfpDNdLi481dPRzFy2Egs9dR5`.
+  Two subsequent one-minute ticks observed the same TxLINE message and reused the receipt
+  without submitting duplicate transactions.
+- PASS — Formula-v2 vault `9npi…UNyF` holds 1,000 test-USDC LP capital. Policy
+  `HEdr…ZERv` was issued against the fixture and fresh odds receipts in transaction
+  `2vUWE4HLKU6VRadhV2WyzPfXvhrgex8XVhQJ1YcL9fAJAuNJTdH2Xvvy9ZaSe45zZFcJBr7Gb9dzxpUw8Mz1TnCD`:
+  50 test-USDC coverage, probability `488034` ppm, premium `36.602550` test-USDC.
 
 ## COMPLIANCE
 

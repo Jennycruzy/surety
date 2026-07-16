@@ -6,6 +6,7 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { buildIssuePolicyWithValidatedOddsTx } from "../../app/lib/surety-client.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
 import {
+  assertAuthenticProofShape,
   pureFixtureId,
   assertProofMatchesPacket,
   dailyOddsRootPda,
@@ -40,6 +41,10 @@ test("captured TxLINE odds proof is byte-pinned and matches the pricing packet",
   );
   assertProofMatchesPacket(proof, packet);
   assert.equal(dailyOddsRootPda(proof.odds.Ts).toBase58(), "9CrnWb2ZBtxX3B2C7GUDacb8AnjvySjyDtci7uy4gdoH");
+});
+
+test("proof-shape guard permits an empty Merkle level", () => {
+  assert.doesNotThrow(() => assertAuthenticProofShape({ ...proof, subTreeProof: [] }));
 });
 
 test("captured TxLINE fixture proof is byte-pinned and derives the ten-day root", () => {
