@@ -60,8 +60,9 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
         expiresAt: BigInt(Math.floor(Date.now() / 1000) + EXPIRY_SECONDS),
       };
       const tx = quote.validatedOddsMessageKeyHex
-        ? await buildIssuePolicyWithValidatedOddsTx(connection, {
+          ? await buildIssuePolicyWithValidatedOddsTx(connection, {
             ...issueInput,
+            fixtureId: FIXTURE_ID,
             validatedOddsMessageKey: Buffer.from(quote.validatedOddsMessageKeyHex, "hex"),
           })
         : await buildIssuePolicyTx(connection, issueInput);

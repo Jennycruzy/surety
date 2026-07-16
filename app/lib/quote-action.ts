@@ -7,9 +7,10 @@ import { PublicKey } from "@solana/web3.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
 import { oddsMessageHash, oddsMessageKey } from "../../services/odds-validation/src/txline.js";
 import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
+import { syncValidatedMarket } from "../../services/odds-validation/src/sync.js";
 import { computeQuote, type BookState, type Outcome, type TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";
 import { ASSET_MINT, FIXTURE_ID } from "./config.js";
-import { bucketHashFor, bucketPda, validatedOddsPda } from "./pda.js";
+import { bucketHashFor, bucketPda, validatedFixturePda, validatedOddsPda } from "./pda.js";
 import { VAULT, getProgram, newConnection } from "./surety-client.js";
 
 const ODDS_SNAPSHOT_FILE =
@@ -52,10 +53,11 @@ export async function requestQuote(input: QuoteRequestInput): Promise<QuoteResul
   const predicateText = `outcome(${FIXTURE_ID}) == ${input.outcome}`;
   const compiled = compilePredicate(predicateText);
 
-  const sourceBytes = await readFile(ODDS_SNAPSHOT_PATH);
-  const packets = JSON.parse(sourceBytes.toString()) as TxlineWinnerPacket[];
+  const synced = REQUIRE_VALIDATED_ODDS ? await syncValidatedMarket(FIXTURE_ID) : null;
+  const sourceBytes = synced?.snapshotBytes ?? await readFile(ODDS_SNAPSHOT_PATH);
+  const packets = synced ? [synced.packet] : JSON.parse(sourceBytes.toString()) as TxlineWinnerPacket[];
   const packet = packets.find((p) => p.SuperOddsType === "1X2_PARTICIPANT_RESULT" && p.MarketPeriod === null);
-  if (!packet) throw new Error("no full-match 1X2 packet found in recorded odds snapshot");
+  if (!packet) throw new Error("no full-match 1X2 packet found in the TxLINE odds snapshot");
   if (BigInt(packet.FixtureId) !== FIXTURE_ID) throw new Error("odds snapshot fixture does not match the configured fixture");
   const packetSourceSha256 = createHash("sha256").update(sourceBytes).digest("hex");
 
@@ -95,7 +97,12 @@ export async function requestQuote(input: QuoteRequestInput): Promise<QuoteResul
   if (REQUIRE_VALIDATED_ODDS && quote.premium !== null) {
     const messageKey = oddsMessageKey(packet.MessageId);
     const receiptAddress = validatedOddsPda(messageKey);
-    const receipt = await program.account.validatedOdds.fetch(receiptAddress);
+    const fixtureReceiptAddress = validatedFixturePda(FIXTURE_ID);
+    const fixtureReceipt = synced?.fixtureReceipt ?? await program.account.validatedFixture.fetch(fixtureReceiptAddress);
+    const receipt = synced?.oddsReceipt ?? await program.account.validatedOdds.fetch(receiptAddress);
+    if (BigInt(fixtureReceipt.fixtureId.toString()) !== FIXTURE_ID) {
+      throw new Error("validated fixture receipt has the wrong fixture");
+    }
     if (BigInt(receipt.fixtureId.toString()) !== FIXTURE_ID) throw new Error("validated odds receipt has the wrong fixture");
     if (Number(receipt.oddsTimestampMs.toString()) !== packet.Ts) throw new Error("validated odds receipt has the wrong timestamp");
     if (!Buffer.from(receipt.messageIdHash as number[]).equals(oddsMessageHash(packet.MessageId))) {
@@ -106,8 +113,10 @@ export async function requestQuote(input: QuoteRequestInput): Promise<QuoteResul
     }
     policyQuoteHash = verifiedQuoteHash({
       vault: VAULT,
+      validatedFixture: fixtureReceiptAddress,
       validatedOdds: receiptAddress,
-      validationReceiptHash: Buffer.from(receipt.validationReceiptHash as number[]),
+      fixtureValidationReceiptHash: Buffer.from(fixtureReceipt.validationReceiptHash as number[]),
+      oddsValidationReceiptHash: Buffer.from(receipt.validationReceiptHash as number[]),
       predicateHash: Buffer.from(compiled.hash, "hex"),
       bucketHash: Buffer.from(bucketHashHex, "hex"),
       coverage,

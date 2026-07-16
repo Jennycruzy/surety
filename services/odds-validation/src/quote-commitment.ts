@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { PublicKey } from "@solana/web3.js";
 
-const VERIFIED_QUOTE_DOMAIN = Buffer.from("SURETY_TXLINE_ODDS_QUOTE_V1");
+const VERIFIED_QUOTE_DOMAIN = Buffer.from("SURETY_TXLINE_ODDS_QUOTE_V2");
 
 function fixedBytes(label: string, value: Buffer, length: number): Buffer {
   if (value.length !== length) throw new Error(`${label} must be ${length} bytes`);
@@ -24,8 +24,10 @@ function u32Le(value: number): Buffer {
 
 export type VerifiedQuoteCommitmentInput = {
   vault: PublicKey;
+  validatedFixture: PublicKey;
   validatedOdds: PublicKey;
-  validationReceiptHash: Buffer;
+  fixtureValidationReceiptHash: Buffer;
+  oddsValidationReceiptHash: Buffer;
   predicateHash: Buffer;
   bucketHash: Buffer;
   coverage: bigint;
@@ -39,8 +41,10 @@ export function verifiedQuoteHash(input: VerifiedQuoteCommitmentInput): Buffer {
       Buffer.concat([
         VERIFIED_QUOTE_DOMAIN,
         input.vault.toBuffer(),
+        input.validatedFixture.toBuffer(),
         input.validatedOdds.toBuffer(),
-        fixedBytes("validationReceiptHash", input.validationReceiptHash, 32),
+        fixedBytes("fixtureValidationReceiptHash", input.fixtureValidationReceiptHash, 32),
+        fixedBytes("oddsValidationReceiptHash", input.oddsValidationReceiptHash, 32),
         fixedBytes("predicateHash", input.predicateHash, 32),
         fixedBytes("bucketHash", input.bucketHash, 32),
         u64Le(input.coverage),

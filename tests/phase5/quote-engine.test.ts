@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
 import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
 import { oddsMessageKey } from "../../services/odds-validation/src/txline.js";
-import { validatedOddsPda } from "../../app/lib/pda.js";
+import { validatedFixturePda, validatedOddsPda } from "../../app/lib/pda.js";
 import { VAULT } from "../../app/lib/surety-client.js";
 import {
   auditQuote,
@@ -92,10 +92,13 @@ test("verified quote commitment matches the Rust on-chain test vector", () => {
   const validatedOdds = validatedOddsPda(
     oddsMessageKey("1837782566:00003:000791-10021-stab"),
   );
+  const validatedFixture = validatedFixturePda(18_237_038n);
   const commitment = verifiedQuoteHash({
     vault: VAULT,
+    validatedFixture,
     validatedOdds,
-    validationReceiptHash: Buffer.alloc(32, 4),
+    fixtureValidationReceiptHash: Buffer.alloc(32, 3),
+    oddsValidationReceiptHash: Buffer.alloc(32, 4),
     predicateHash: Buffer.from(predicateHash, "hex"),
     bucketHash: Buffer.from(bucketHash, "hex"),
     coverage: 50_000_000n,
@@ -103,5 +106,5 @@ test("verified quote commitment matches the Rust on-chain test vector", () => {
     probabilityPpm: 359_202,
   });
   assert.equal(validatedOdds.toBase58(), "24Fkoixd9C1sFFmkknWmu5N52MyV5cwpPs29aAN8AUJG");
-  assert.equal(commitment.toString("hex"), "69c335c848cdc202c310f08f2fa87299e56cf0873d9e1712ac0d47609470d779");
+  assert.equal(commitment.toString("hex"), "deb9b924e9b314ef08dd5db77876dfe772e521876caed1d160470fcb3275939f");
 });

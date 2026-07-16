@@ -47,10 +47,19 @@ export const dailyOddsMerkleRootsPda = (proofTimestampMs: number) => {
   return pda([Buffer.from("daily_batch_roots"), u16LE(epochDay)], TXLINE_PROGRAM_ID);
 };
 
+export const tenDailyFixturesRootsPda = (proofTimestampMs: number) => {
+  const epochDay = Math.floor(proofTimestampMs / 86_400_000);
+  const windowStartDay = Math.floor(epochDay / 10) * 10;
+  return pda([Buffer.from("ten_daily_fixtures_roots"), u16LE(windowStartDay)], TXLINE_PROGRAM_ID);
+};
+
 export const validatedOddsPda = (messageIdKey: Buffer) => {
   if (messageIdKey.length !== 16) throw new Error("validated odds message key must be 16 bytes");
   return pda([Buffer.from("validated_odds"), messageIdKey]);
 };
+
+export const validatedFixturePda = (fixtureId: bigint) =>
+  pda([Buffer.from("validated_fixture"), u64LE(fixtureId)]);
 
 export const bucketHashFor = (fixtureId: bigint, outcome: "WIN_HOME" | "DRAW" | "WIN_AWAY") =>
   `match:${fixtureId}:${outcome}`;

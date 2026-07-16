@@ -8,8 +8,10 @@ pub const PROGRAM_ID: Pubkey = Pubkey::new_from_array([
 ]);
 pub const VALIDATE_STAT_V2_DISCRIMINATOR: [u8; 8] = [208, 215, 194, 214, 241, 71, 246, 178];
 pub const VALIDATE_ODDS_DISCRIMINATOR: [u8; 8] = [192, 19, 91, 138, 104, 100, 212, 86];
+pub const VALIDATE_FIXTURE_DISCRIMINATOR: [u8; 8] = [231, 129, 218, 86, 223, 114, 21, 126];
 pub const DAILY_SCORES_SEED: &[u8] = b"daily_scores_roots";
 pub const DAILY_ODDS_SEED: &[u8] = b"daily_batch_roots";
+pub const TEN_DAILY_FIXTURES_SEED: &[u8] = b"ten_daily_fixtures_roots";
 pub const MILLIS_PER_DAY: i64 = 86_400_000;
 pub const FINAL_PERIOD: i32 = 100;
 
@@ -53,6 +55,45 @@ pub struct OddsBatchSummary {
 pub struct OddsValidationInput {
     pub odds_snapshot: Odds,
     pub summary: OddsBatchSummary,
+    pub sub_tree_proof: Vec<ProofNode>,
+    pub main_tree_proof: Vec<ProofNode>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Fixture {
+    pub ts: i64,
+    pub start_time: i64,
+    pub competition: String,
+    pub competition_id: i32,
+    pub fixture_group_id: i32,
+    pub participant1_id: i32,
+    pub participant1: String,
+    pub participant2_id: i32,
+    pub participant2: String,
+    pub fixture_id: i64,
+    pub participant1_is_home: bool,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FixtureUpdateStats {
+    pub update_count: u32,
+    pub min_timestamp: i64,
+    pub max_timestamp: i64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FixtureBatchSummary {
+    pub fixture_id: i64,
+    pub competition_id: i32,
+    pub competition: String,
+    pub update_stats: FixtureUpdateStats,
+    pub update_sub_tree_root: [u8; 32],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FixtureValidationInput {
+    pub snapshot: Fixture,
+    pub summary: FixtureBatchSummary,
     pub sub_tree_proof: Vec<ProofNode>,
     pub main_tree_proof: Vec<ProofNode>,
 }
@@ -151,6 +192,14 @@ pub struct ValidateOddsArgs<'a> {
     pub ts: i64,
     pub odds_snapshot: &'a Odds,
     pub summary: &'a OddsBatchSummary,
+    pub sub_tree_proof: &'a Vec<ProofNode>,
+    pub main_tree_proof: &'a Vec<ProofNode>,
+}
+
+#[derive(AnchorSerialize)]
+pub struct ValidateFixtureArgs<'a> {
+    pub snapshot: &'a Fixture,
+    pub summary: &'a FixtureBatchSummary,
     pub sub_tree_proof: &'a Vec<ProofNode>,
     pub main_tree_proof: &'a Vec<ProofNode>,
 }

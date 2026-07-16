@@ -17,6 +17,7 @@ import {
   reservePda,
   shareMintPda,
   validatedOddsPda,
+  validatedFixturePda,
   withdrawalPda,
   withdrawalSharesPda,
 } from "./pda.js";
@@ -117,7 +118,7 @@ export async function buildIssuePolicyTx(connection: Connection, input: IssuePol
 
 export async function buildIssuePolicyWithValidatedOddsTx(
   connection: Connection,
-  input: IssuePolicyInput & { validatedOddsMessageKey: Buffer },
+  input: IssuePolicyInput & { fixtureId: bigint; validatedOddsMessageKey: Buffer },
 ): Promise<Transaction> {
   const program = getProgram(connection, { publicKey: input.holder });
   const padded = Buffer.alloc(32);
@@ -147,6 +148,7 @@ export async function buildIssuePolicyWithValidatedOddsTx(
       policy,
       policyEscrow: policyEscrowPda(policy),
       validatedOdds: validatedOddsPda(input.validatedOddsMessageKey),
+      validatedFixture: validatedFixturePda(input.fixtureId),
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     })

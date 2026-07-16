@@ -571,6 +571,40 @@
           }
         },
         {
+          "name": "validated_fixture",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  102,
+                  105,
+                  120,
+                  116,
+                  117,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "validated_fixture.fixture_id",
+                "account": "ValidatedFixture"
+              }
+            ]
+          }
+        },
+        {
           "name": "token_program"
         },
         {
@@ -715,6 +749,85 @@
           "type": {
             "defined": {
               "name": "PostAttestationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "record_validated_fixture",
+      "discriminator": [
+        170,
+        76,
+        149,
+        162,
+        154,
+        85,
+        174,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "validated_fixture",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  102,
+                  105,
+                  120,
+                  116,
+                  117,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "fixture_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "txline_program",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "ten_daily_fixtures_roots"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fixture_id",
+          "type": "u64"
+        },
+        {
+          "name": "proof",
+          "type": {
+            "defined": {
+              "name": "FixtureValidationInput"
             }
           }
         }
@@ -1048,6 +1161,19 @@
       ]
     },
     {
+      "name": "ValidatedFixture",
+      "discriminator": [
+        184,
+        101,
+        150,
+        63,
+        185,
+        17,
+        201,
+        197
+      ]
+    },
+    {
       "name": "ValidatedOdds",
       "discriminator": [
         193,
@@ -1099,6 +1225,19 @@
         155,
         19,
         243
+      ]
+    },
+    {
+      "name": "FixtureValidated",
+      "discriminator": [
+        233,
+        220,
+        140,
+        119,
+        33,
+        40,
+        105,
+        148
       ]
     },
     {
@@ -1454,6 +1593,26 @@
       "code": 6046,
       "name": "ValidatedOddsRequired",
       "msg": "this vault requires TxLINE-validated odds issuance"
+    },
+    {
+      "code": 6047,
+      "name": "TxlineFixtureRejected",
+      "msg": "TxLINE rejected the fixture record or its Merkle proof"
+    },
+    {
+      "code": 6048,
+      "name": "InvalidFixture",
+      "msg": "TxLINE fixture record is malformed or unsupported"
+    },
+    {
+      "code": 6049,
+      "name": "FixtureIdMismatch",
+      "msg": "TxLINE fixture identity does not match the expected fixture"
+    },
+    {
+      "code": 6050,
+      "name": "BucketHashMismatch",
+      "msg": "bucket hash does not match the policy fixture and outcome"
     }
   ],
   "types": [
@@ -1536,6 +1695,208 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Fixture",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "competition",
+            "type": "string"
+          },
+          {
+            "name": "competition_id",
+            "type": "i32"
+          },
+          {
+            "name": "fixture_group_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1",
+            "type": "string"
+          },
+          {
+            "name": "participant2_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant2",
+            "type": "string"
+          },
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "participant1_is_home",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FixtureBatchSummary",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixture_id",
+            "type": "i64"
+          },
+          {
+            "name": "competition_id",
+            "type": "i32"
+          },
+          {
+            "name": "competition",
+            "type": "string"
+          },
+          {
+            "name": "update_stats",
+            "type": {
+              "defined": {
+                "name": "FixtureUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "update_sub_tree_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FixtureUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "update_count",
+            "type": "u32"
+          },
+          {
+            "name": "min_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "max_timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FixtureValidated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "validated_fixture",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixture_id",
+            "type": "u64"
+          },
+          {
+            "name": "snapshot_timestamp_ms",
+            "type": "i64"
+          },
+          {
+            "name": "start_time_ms",
+            "type": "i64"
+          },
+          {
+            "name": "competition_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant2_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1_is_home",
+            "type": "bool"
+          },
+          {
+            "name": "validation_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FixtureValidationInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "snapshot",
+            "type": {
+              "defined": {
+                "name": "Fixture"
+              }
+            }
+          },
+          {
+            "name": "summary",
+            "type": {
+              "defined": {
+                "name": "FixtureBatchSummary"
+              }
+            }
+          },
+          {
+            "name": "sub_tree_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "main_tree_proof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "ProofNode"
+                }
+              }
+            }
           }
         ]
       }
@@ -2040,6 +2401,10 @@
             "type": "pubkey"
           },
           {
+            "name": "validated_fixture",
+            "type": "pubkey"
+          },
+          {
             "name": "validated_odds",
             "type": "pubkey"
           },
@@ -2448,6 +2813,59 @@
                   "name": "StatLeaf"
                 }
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ValidatedFixture",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "participant1_is_home",
+            "type": "bool"
+          },
+          {
+            "name": "fixture_id",
+            "type": "u64"
+          },
+          {
+            "name": "snapshot_timestamp_ms",
+            "type": "i64"
+          },
+          {
+            "name": "start_time_ms",
+            "type": "i64"
+          },
+          {
+            "name": "competition_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1_id",
+            "type": "i32"
+          },
+          {
+            "name": "participant2_id",
+            "type": "i32"
+          },
+          {
+            "name": "validation_receipt_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         ]

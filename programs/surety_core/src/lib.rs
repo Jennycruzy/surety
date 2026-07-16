@@ -12,8 +12,8 @@ use solana_sha256_hasher::hash;
 
 mod txline;
 use txline::{
-    BinaryExpression, Comparison, NDimensionalStrategy, OddsValidationInput, StatPredicate,
-    StatValidationInput, TraderPredicate,
+    BinaryExpression, Comparison, FixtureValidationInput, NDimensionalStrategy,
+    OddsValidationInput, StatPredicate, StatValidationInput, TraderPredicate,
 };
 
 declare_id!("3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW");
@@ -26,8 +26,9 @@ const MAX_TXLINE_PROOF_NODES: usize = 32;
 const MAX_SETTLEMENT_STATS: usize = 4;
 const MAX_ODDS_AGE_MS: i64 = 15 * 60 * 1_000;
 const MAX_ODDS_FUTURE_SKEW_MS: i64 = 30 * 1_000;
+const FIXTURE_ID_MASK: u64 = (1u64 << 48) - 1;
 const ATTESTATION_DOMAIN: &[u8] = b"SURETY_ATTESTATION_V1";
-const VERIFIED_QUOTE_DOMAIN: &[u8] = b"SURETY_TXLINE_ODDS_QUOTE_V1";
+const VERIFIED_QUOTE_DOMAIN: &[u8] = b"SURETY_TXLINE_ODDS_QUOTE_V2";
 
 #[program]
 pub mod surety_core {
@@ -47,7 +48,7 @@ pub mod surety_core {
         );
         require!(epoch_seconds > 0, SuretyError::InvalidEpoch);
         require!(margin_bps >= 10_000, SuretyError::InvalidMargin);
-        require!(formula_version > 0, SuretyError::InvalidFormulaVersion);
+        require!(matches!(formula_version, 1 | 2), SuretyError::InvalidFormulaVersion);
 
         let vault = &mut ctx.accounts.vault;
         vault.version = VAULT_VERSION;
@@ -306,6 +307,45 @@ pub mod surety_core {
         Ok(())
     }
 
+    pub fn record_validated_fixture(
+        ctx: Context<RecordValidatedFixture>,
+        fixture_id: u64,
+        proof: FixtureValidationInput,
+    ) -> Result<()> {
+        let proved_fixture_id = pure_fixture_id(proof.snapshot.fixture_id)?;
+        require!(fixture_id == proved_fixture_id, SuretyError::FixtureIdMismatch);
+        let validation_receipt_hash = validate_txline_fixture(
+            &ctx.accounts.txline_program,
+            &ctx.accounts.ten_daily_fixtures_roots,
+            &proof,
+        )?;
+
+        let receipt = &mut ctx.accounts.validated_fixture;
+        receipt.version = 1;
+        receipt.bump = ctx.bumps.validated_fixture;
+        receipt.participant1_is_home = proof.snapshot.participant1_is_home;
+        receipt.fixture_id = fixture_id;
+        receipt.snapshot_timestamp_ms = proof.snapshot.ts;
+        receipt.start_time_ms = proof.snapshot.start_time;
+        receipt.competition_id = proof.snapshot.competition_id;
+        receipt.participant1_id = proof.snapshot.participant1_id;
+        receipt.participant2_id = proof.snapshot.participant2_id;
+        receipt.validation_receipt_hash = validation_receipt_hash;
+
+        emit!(FixtureValidated {
+            validated_fixture: receipt.key(),
+            fixture_id,
+            snapshot_timestamp_ms: receipt.snapshot_timestamp_ms,
+            start_time_ms: receipt.start_time_ms,
+            competition_id: receipt.competition_id,
+            participant1_id: receipt.participant1_id,
+            participant2_id: receipt.participant2_id,
+            participant1_is_home: receipt.participant1_is_home,
+            validation_receipt_hash,
+        });
+        Ok(())
+    }
+
     pub fn issue_policy_with_validated_odds(
         ctx: Context<IssuePolicyWithValidatedOdds>,
         args: IssuePolicyArgs,
@@ -314,6 +354,7 @@ pub mod surety_core {
         let probability_ppm = validate_verified_quote(
             &ctx.accounts.vault,
             &ctx.accounts.bucket,
+            &ctx.accounts.validated_fixture,
             &ctx.accounts.validated_odds,
             &args,
         )?;
@@ -335,6 +376,7 @@ pub mod surety_core {
 
         emit!(PolicyIssuedWithValidatedOdds {
             policy: ctx.accounts.policy.key(),
+            validated_fixture: ctx.accounts.validated_fixture.key(),
             validated_odds: ctx.accounts.validated_odds.key(),
             fixture_id: ctx.accounts.validated_odds.fixture_id,
             odds_timestamp_ms: ctx.accounts.validated_odds.odds_timestamp_ms,
@@ -788,6 +830,27 @@ pub struct RecordValidatedOdds<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(fixture_id: u64, proof: FixtureValidationInput)]
+pub struct RecordValidatedFixture<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        init,
+        payer = payer,
+        space = 8 + ValidatedFixture::INIT_SPACE,
+        seeds = [b"validated_fixture", fixture_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub validated_fixture: Box<Account<'info, ValidatedFixture>>,
+    /// CHECK: fixed to TxLINE's executable devnet program.
+    #[account(address = txline::PROGRAM_ID, executable)]
+    pub txline_program: UncheckedAccount<'info>,
+    /// CHECK: exact PDA and TxLINE ownership are verified before CPI.
+    pub ten_daily_fixtures_roots: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(args: IssuePolicyArgs)]
 pub struct IssuePolicyWithValidatedOdds<'info> {
     #[account(mut)]
@@ -836,6 +899,14 @@ pub struct IssuePolicyWithValidatedOdds<'info> {
         bump = validated_odds.bump
     )]
     pub validated_odds: Box<Account<'info, ValidatedOdds>>,
+    #[account(
+        seeds = [b"validated_fixture", validated_fixture.fixture_id.to_le_bytes().as_ref()],
+        bump = validated_fixture.bump,
+        constraint = validated_odds.fixture_id > 0
+            && validated_fixture.fixture_id == validated_odds.fixture_id as u64
+            @ SuretyError::FixtureIdMismatch
+    )]
+    pub validated_fixture: Box<Account<'info, ValidatedFixture>>,
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
@@ -971,6 +1042,21 @@ pub struct ValidatedOdds {
 
 #[account]
 #[derive(InitSpace)]
+pub struct ValidatedFixture {
+    pub version: u8,
+    pub bump: u8,
+    pub participant1_is_home: bool,
+    pub fixture_id: u64,
+    pub snapshot_timestamp_ms: i64,
+    pub start_time_ms: i64,
+    pub competition_id: i32,
+    pub participant1_id: i32,
+    pub participant2_id: i32,
+    pub validation_receipt_hash: [u8; 32],
+}
+
+#[account]
+#[derive(InitSpace)]
 pub struct WithdrawalRequest {
     pub vault: Pubkey,
     pub lp: Pubkey,
@@ -1088,8 +1174,22 @@ pub struct OddsValidated {
 }
 
 #[event]
+pub struct FixtureValidated {
+    pub validated_fixture: Pubkey,
+    pub fixture_id: u64,
+    pub snapshot_timestamp_ms: i64,
+    pub start_time_ms: i64,
+    pub competition_id: i32,
+    pub participant1_id: i32,
+    pub participant2_id: i32,
+    pub participant1_is_home: bool,
+    pub validation_receipt_hash: [u8; 32],
+}
+
+#[event]
 pub struct PolicyIssuedWithValidatedOdds {
     pub policy: Pubkey,
+    pub validated_fixture: Pubkey,
     pub validated_odds: Pubkey,
     pub fixture_id: i64,
     pub odds_timestamp_ms: i64,
@@ -1207,6 +1307,14 @@ pub enum SuretyError {
     VerifiedQuoteHashMismatch,
     #[msg("this vault requires TxLINE-validated odds issuance")]
     ValidatedOddsRequired,
+    #[msg("TxLINE rejected the fixture record or its Merkle proof")]
+    TxlineFixtureRejected,
+    #[msg("TxLINE fixture record is malformed or unsupported")]
+    InvalidFixture,
+    #[msg("TxLINE fixture identity does not match the expected fixture")]
+    FixtureIdMismatch,
+    #[msg("bucket hash does not match the policy fixture and outcome")]
+    BucketHashMismatch,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1327,6 +1435,89 @@ fn issue_policy_core<'info>(
     Ok(())
 }
 
+fn pure_fixture_id(packed_fixture_id: i64) -> Result<u64> {
+    require!(packed_fixture_id > 0, SuretyError::InvalidFixture);
+    let fixture_id = (packed_fixture_id as u64) & FIXTURE_ID_MASK;
+    require!(fixture_id > 0, SuretyError::InvalidFixture);
+    Ok(fixture_id)
+}
+
+fn validate_txline_fixture<'info>(
+    txline_program: &UncheckedAccount<'info>,
+    ten_daily_fixtures_roots: &UncheckedAccount<'info>,
+    proof: &FixtureValidationInput,
+) -> Result<[u8; 32]> {
+    let snapshot = &proof.snapshot;
+    require!(
+        proof.sub_tree_proof.len() <= MAX_TXLINE_PROOF_NODES
+            && proof.main_tree_proof.len() <= MAX_TXLINE_PROOF_NODES,
+        SuretyError::TxlineProofTooLarge
+    );
+    require!(
+        snapshot.ts > 0
+            && snapshot.start_time > 0
+            && snapshot.participant1_id > 0
+            && snapshot.participant2_id > 0
+            && snapshot.participant1_id != snapshot.participant2_id
+            && !snapshot.participant1.is_empty()
+            && !snapshot.participant2.is_empty()
+            && !snapshot.competition.is_empty()
+            && snapshot.competition_id == proof.summary.competition_id
+            && snapshot.competition == proof.summary.competition
+            && proof.summary.update_stats.min_timestamp <= snapshot.ts
+            && snapshot.ts <= proof.summary.update_stats.max_timestamp
+            && pure_fixture_id(snapshot.fixture_id)? == pure_fixture_id(proof.summary.fixture_id)?,
+        SuretyError::InvalidFixture
+    );
+
+    let expected_root = ten_daily_fixtures_root(snapshot.ts)?;
+    require_keys_eq!(
+        ten_daily_fixtures_roots.key(),
+        expected_root,
+        SuretyError::InvalidTxlineRoot
+    );
+    require_keys_eq!(
+        *ten_daily_fixtures_roots.owner,
+        txline::PROGRAM_ID,
+        SuretyError::InvalidTxlineRoot
+    );
+
+    let mut cpi_data = txline::VALIDATE_FIXTURE_DISCRIMINATOR.to_vec();
+    txline::ValidateFixtureArgs {
+        snapshot,
+        summary: &proof.summary,
+        sub_tree_proof: &proof.sub_tree_proof,
+        main_tree_proof: &proof.main_tree_proof,
+    }
+    .serialize(&mut cpi_data)
+    .map_err(|_| error!(SuretyError::TxlineSerializationFailed))?;
+    let validation_receipt_hash = hash(&cpi_data).to_bytes();
+    let validation_ix = Instruction {
+        program_id: txline::PROGRAM_ID,
+        accounts: vec![AccountMeta::new_readonly(expected_root, false)],
+        data: cpi_data,
+    };
+    invoke(
+        &validation_ix,
+        &[
+            ten_daily_fixtures_roots.to_account_info(),
+            txline_program.to_account_info(),
+        ],
+    )?;
+    let (return_program, return_bytes) =
+        get_return_data().ok_or_else(|| error!(SuretyError::MissingTxlineReturnData))?;
+    require_keys_eq!(
+        return_program,
+        txline::PROGRAM_ID,
+        SuretyError::InvalidTxlineReturnProgram
+    );
+    require!(
+        return_bytes.as_slice() == [1u8],
+        SuretyError::TxlineFixtureRejected
+    );
+    Ok(validation_receipt_hash)
+}
+
 fn validate_txline_odds<'info>(
     txline_program: &UncheckedAccount<'info>,
     daily_odds_merkle_roots: &UncheckedAccount<'info>,
@@ -1411,6 +1602,7 @@ fn validate_txline_odds<'info>(
 fn validate_verified_quote(
     vault: &Account<Vault>,
     bucket: &Account<ExposureBucket>,
+    validated_fixture: &Account<ValidatedFixture>,
     validated_odds: &Account<ValidatedOdds>,
     args: &IssuePolicyArgs,
 ) -> Result<u32> {
@@ -1433,7 +1625,16 @@ fn validate_verified_quote(
         SuretyError::StaleOddsProof
     );
 
+    require!(
+        validated_odds.fixture_id > 0
+            && validated_fixture.fixture_id == validated_odds.fixture_id as u64,
+        SuretyError::FixtureIdMismatch
+    );
     let outcome_index = policy_outcome_index(args, validated_odds.fixture_id)?;
+    require!(
+        args.bucket_hash == expected_policy_bucket_hash(validated_odds.fixture_id, outcome_index)?,
+        SuretyError::BucketHashMismatch
+    );
     let current_exposure = if bucket.vault == Pubkey::default() {
         0
     } else {
@@ -1452,9 +1653,11 @@ fn validate_verified_quote(
 
     let expected_quote_hash = verified_quote_hash(
         vault.key(),
+        validated_fixture.key(),
         validated_odds.key(),
         probability_ppm,
         args,
+        validated_fixture.validation_receipt_hash,
         validated_odds.validation_receipt_hash,
     );
     require!(
@@ -1577,22 +1780,37 @@ fn ceil_div_u128(numerator: u128, denominator: u128) -> Result<u128> {
 
 fn verified_quote_hash(
     vault: Pubkey,
+    validated_fixture: Pubkey,
     validated_odds: Pubkey,
     probability_ppm: u32,
     args: &IssuePolicyArgs,
-    validation_receipt_hash: [u8; 32],
+    fixture_validation_receipt_hash: [u8; 32],
+    odds_validation_receipt_hash: [u8; 32],
 ) -> [u8; 32] {
-    let mut bytes = Vec::with_capacity(VERIFIED_QUOTE_DOMAIN.len() + 32 * 6 + 8 * 3 + 4);
+    let mut bytes = Vec::with_capacity(VERIFIED_QUOTE_DOMAIN.len() + 32 * 8 + 8 * 2 + 4);
     bytes.extend_from_slice(VERIFIED_QUOTE_DOMAIN);
     bytes.extend_from_slice(vault.as_ref());
+    bytes.extend_from_slice(validated_fixture.as_ref());
     bytes.extend_from_slice(validated_odds.as_ref());
-    bytes.extend_from_slice(&validation_receipt_hash);
+    bytes.extend_from_slice(&fixture_validation_receipt_hash);
+    bytes.extend_from_slice(&odds_validation_receipt_hash);
     bytes.extend_from_slice(&args.predicate_hash);
     bytes.extend_from_slice(&args.bucket_hash);
     bytes.extend_from_slice(&args.coverage.to_le_bytes());
     bytes.extend_from_slice(&args.premium.to_le_bytes());
     bytes.extend_from_slice(&probability_ppm.to_le_bytes());
     hash(&bytes).to_bytes()
+}
+
+fn expected_policy_bucket_hash(fixture_id: i64, outcome_index: usize) -> Result<[u8; 32]> {
+    require!(fixture_id > 0, SuretyError::OddsPolicyMismatch);
+    let outcome = match outcome_index {
+        0 => "WIN_HOME",
+        1 => "DRAW",
+        2 => "WIN_AWAY",
+        _ => return err!(SuretyError::OddsPolicyMismatch),
+    };
+    Ok(hash(format!("match:{fixture_id}:{outcome}").as_bytes()).to_bytes())
 }
 
 fn transfer_tokens<'info>(
@@ -1739,6 +1957,27 @@ fn daily_odds_root(timestamp_ms: i64) -> Result<Pubkey> {
         u16::try_from(epoch_day).map_err(|_| error!(SuretyError::InvalidProofTimestamp))?;
     Ok(Pubkey::find_program_address(
         &[txline::DAILY_ODDS_SEED, &epoch_day.to_le_bytes()],
+        &txline::PROGRAM_ID,
+    )
+    .0)
+}
+
+fn ten_daily_fixtures_root(timestamp_ms: i64) -> Result<Pubkey> {
+    require!(timestamp_ms >= 0, SuretyError::InvalidProofTimestamp);
+    let epoch_day = timestamp_ms
+        .checked_div(txline::MILLIS_PER_DAY)
+        .ok_or(SuretyError::InvalidProofTimestamp)?;
+    let window_start = epoch_day
+        .checked_div(10)
+        .and_then(|window| window.checked_mul(10))
+        .ok_or(SuretyError::InvalidProofTimestamp)?;
+    let window_start =
+        u16::try_from(window_start).map_err(|_| error!(SuretyError::InvalidProofTimestamp))?;
+    Ok(Pubkey::find_program_address(
+        &[
+            txline::TEN_DAILY_FIXTURES_SEED,
+            &window_start.to_le_bytes(),
+        ],
         &txline::PROGRAM_ID,
     )
     .0)
@@ -2068,18 +2307,37 @@ mod tests {
         let message_hash = hash(b"1837782566:00003:000791-10021-stab").to_bytes();
         let validated_odds =
             Pubkey::find_program_address(&[b"validated_odds", &message_hash[..16]], &crate::ID).0;
+        let validated_fixture = Pubkey::find_program_address(
+            &[b"validated_fixture", &fixture_id.to_le_bytes()],
+            &crate::ID,
+        )
+        .0;
         assert_eq!(
             verified_quote_hash(
                 Pubkey::from_str("CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC").unwrap(),
+                validated_fixture,
                 validated_odds,
                 359_202,
                 &args,
+                [3; 32],
                 [4; 32],
             ),
             [
-                105, 195, 53, 200, 72, 205, 194, 2, 195, 16, 240, 143, 47, 168, 114, 153, 229, 108,
-                240, 135, 61, 158, 23, 18, 172, 13, 71, 96, 148, 112, 215, 121,
+                222, 185, 185, 36, 233, 179, 20, 239, 8, 221, 93, 183, 120, 118, 223, 231,
+                114, 229, 33, 135, 108, 174, 209, 209, 96, 71, 15, 203, 50, 117, 147, 159,
             ]
+        );
+    }
+
+    #[test]
+    fn outcome_bucket_hash_is_bound_to_the_proved_fixture() {
+        assert_eq!(
+            expected_policy_bucket_hash(18_237_038, 0).unwrap(),
+            hash(b"match:18237038:WIN_HOME").to_bytes()
+        );
+        assert_ne!(
+            expected_policy_bucket_hash(18_237_038, 1).unwrap(),
+            expected_policy_bucket_hash(18_237_038, 0).unwrap()
         );
     }
 }

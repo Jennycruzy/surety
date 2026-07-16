@@ -577,6 +577,40 @@ export type SuretyCore = {
           }
         },
         {
+          "name": "validatedFixture",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  102,
+                  105,
+                  120,
+                  116,
+                  117,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "validated_fixture.fixture_id",
+                "account": "validatedFixture"
+              }
+            ]
+          }
+        },
+        {
           "name": "tokenProgram"
         },
         {
@@ -721,6 +755,85 @@ export type SuretyCore = {
           "type": {
             "defined": {
               "name": "postAttestationArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "recordValidatedFixture",
+      "discriminator": [
+        170,
+        76,
+        149,
+        162,
+        154,
+        85,
+        174,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "validatedFixture",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  108,
+                  105,
+                  100,
+                  97,
+                  116,
+                  101,
+                  100,
+                  95,
+                  102,
+                  105,
+                  120,
+                  116,
+                  117,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "fixtureId"
+              }
+            ]
+          }
+        },
+        {
+          "name": "txlineProgram",
+          "address": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+        },
+        {
+          "name": "tenDailyFixturesRoots"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fixtureId",
+          "type": "u64"
+        },
+        {
+          "name": "proof",
+          "type": {
+            "defined": {
+              "name": "fixtureValidationInput"
             }
           }
         }
@@ -1054,6 +1167,19 @@ export type SuretyCore = {
       ]
     },
     {
+      "name": "validatedFixture",
+      "discriminator": [
+        184,
+        101,
+        150,
+        63,
+        185,
+        17,
+        201,
+        197
+      ]
+    },
+    {
       "name": "validatedOdds",
       "discriminator": [
         193,
@@ -1105,6 +1231,19 @@ export type SuretyCore = {
         155,
         19,
         243
+      ]
+    },
+    {
+      "name": "fixtureValidated",
+      "discriminator": [
+        233,
+        220,
+        140,
+        119,
+        33,
+        40,
+        105,
+        148
       ]
     },
     {
@@ -1460,6 +1599,26 @@ export type SuretyCore = {
       "code": 6046,
       "name": "validatedOddsRequired",
       "msg": "this vault requires TxLINE-validated odds issuance"
+    },
+    {
+      "code": 6047,
+      "name": "txlineFixtureRejected",
+      "msg": "TxLINE rejected the fixture record or its Merkle proof"
+    },
+    {
+      "code": 6048,
+      "name": "invalidFixture",
+      "msg": "TxLINE fixture record is malformed or unsupported"
+    },
+    {
+      "code": 6049,
+      "name": "fixtureIdMismatch",
+      "msg": "TxLINE fixture identity does not match the expected fixture"
+    },
+    {
+      "code": 6050,
+      "name": "bucketHashMismatch",
+      "msg": "bucket hash does not match the policy fixture and outcome"
     }
   ],
   "types": [
@@ -1542,6 +1701,208 @@ export type SuretyCore = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixture",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "startTime",
+            "type": "i64"
+          },
+          {
+            "name": "competition",
+            "type": "string"
+          },
+          {
+            "name": "competitionId",
+            "type": "i32"
+          },
+          {
+            "name": "fixtureGroupId",
+            "type": "i32"
+          },
+          {
+            "name": "participant1Id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1",
+            "type": "string"
+          },
+          {
+            "name": "participant2Id",
+            "type": "i32"
+          },
+          {
+            "name": "participant2",
+            "type": "string"
+          },
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "participant1IsHome",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixtureBatchSummary",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fixtureId",
+            "type": "i64"
+          },
+          {
+            "name": "competitionId",
+            "type": "i32"
+          },
+          {
+            "name": "competition",
+            "type": "string"
+          },
+          {
+            "name": "updateStats",
+            "type": {
+              "defined": {
+                "name": "fixtureUpdateStats"
+              }
+            }
+          },
+          {
+            "name": "updateSubTreeRoot",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixtureUpdateStats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "updateCount",
+            "type": "u32"
+          },
+          {
+            "name": "minTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "maxTimestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixtureValidated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "validatedFixture",
+            "type": "pubkey"
+          },
+          {
+            "name": "fixtureId",
+            "type": "u64"
+          },
+          {
+            "name": "snapshotTimestampMs",
+            "type": "i64"
+          },
+          {
+            "name": "startTimeMs",
+            "type": "i64"
+          },
+          {
+            "name": "competitionId",
+            "type": "i32"
+          },
+          {
+            "name": "participant1Id",
+            "type": "i32"
+          },
+          {
+            "name": "participant2Id",
+            "type": "i32"
+          },
+          {
+            "name": "participant1IsHome",
+            "type": "bool"
+          },
+          {
+            "name": "validationReceiptHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fixtureValidationInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "snapshot",
+            "type": {
+              "defined": {
+                "name": "fixture"
+              }
+            }
+          },
+          {
+            "name": "summary",
+            "type": {
+              "defined": {
+                "name": "fixtureBatchSummary"
+              }
+            }
+          },
+          {
+            "name": "subTreeProof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "proofNode"
+                }
+              }
+            }
+          },
+          {
+            "name": "mainTreeProof",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "proofNode"
+                }
+              }
+            }
           }
         ]
       }
@@ -2046,6 +2407,10 @@ export type SuretyCore = {
             "type": "pubkey"
           },
           {
+            "name": "validatedFixture",
+            "type": "pubkey"
+          },
+          {
             "name": "validatedOdds",
             "type": "pubkey"
           },
@@ -2454,6 +2819,59 @@ export type SuretyCore = {
                   "name": "statLeaf"
                 }
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "validatedFixture",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "participant1IsHome",
+            "type": "bool"
+          },
+          {
+            "name": "fixtureId",
+            "type": "u64"
+          },
+          {
+            "name": "snapshotTimestampMs",
+            "type": "i64"
+          },
+          {
+            "name": "startTimeMs",
+            "type": "i64"
+          },
+          {
+            "name": "competitionId",
+            "type": "i32"
+          },
+          {
+            "name": "participant1Id",
+            "type": "i32"
+          },
+          {
+            "name": "participant2Id",
+            "type": "i32"
+          },
+          {
+            "name": "validationReceiptHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
             }
           }
         ]

@@ -6,12 +6,18 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { buildIssuePolicyWithValidatedOddsTx } from "../../app/lib/surety-client.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
 import {
+  pureFixtureId,
   assertProofMatchesPacket,
   dailyOddsRootPda,
   oddsMessageKey,
+  tenDailyFixturesRootPda,
+  type RawFixtureValidation,
   type RawOddsValidation,
 } from "../../services/odds-validation/src/txline.js";
-import { buildRecordValidatedOddsTx } from "../../services/odds-validation/src/record.js";
+import {
+  buildRecordValidatedFixtureTx,
+  buildRecordValidatedOddsTx,
+} from "../../services/odds-validation/src/record.js";
 import type { TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";
 
 const proofPath = "data/recordings/phase0-18237038-message-000791-odds-proof.raw.json";
@@ -23,6 +29,9 @@ const packets = JSON.parse(
 const packet = packets.find(
   (candidate) => candidate.SuperOddsType === "1X2_PARTICIPANT_RESULT" && candidate.MarketPeriod === null,
 )!;
+const fixtureProofPath = "data/recordings/txline-18257865-1784149200000-fixture-proof.raw.json";
+const fixtureProofBytes = readFileSync(fixtureProofPath);
+const fixtureProof = JSON.parse(fixtureProofBytes.toString("utf8")) as RawFixtureValidation;
 
 test("captured TxLINE odds proof is byte-pinned and matches the pricing packet", () => {
   assert.equal(
@@ -31,6 +40,25 @@ test("captured TxLINE odds proof is byte-pinned and matches the pricing packet",
   );
   assertProofMatchesPacket(proof, packet);
   assert.equal(dailyOddsRootPda(proof.odds.Ts).toBase58(), "9CrnWb2ZBtxX3B2C7GUDacb8AnjvySjyDtci7uy4gdoH");
+});
+
+test("captured TxLINE fixture proof is byte-pinned and derives the ten-day root", () => {
+  assert.equal(
+    createHash("sha256").update(fixtureProofBytes).digest("hex"),
+    "9d934e74663ba195b3f49f3274d16f2fd3db99616d2b8a74e6375653e5fd3bac",
+  );
+  assert.equal(pureFixtureId(fixtureProof.snapshot.FixtureId), 18_257_865n);
+  assert.equal(tenDailyFixturesRootPda(fixtureProof.snapshot.Ts).toBase58(), "AzB6fHDNvTThdvQazWvYfgsCbDm6Ksi3zP5BzoxYo5Ri");
+});
+
+test("real fixture validation transaction fits Solana's limit", async () => {
+  const connection = new Connection("http://127.0.0.1:18899", "confirmed");
+  const payer = Keypair.generate();
+  const transaction = await buildRecordValidatedFixtureTx(connection, payer.publicKey, fixtureProof);
+  transaction.feePayer = payer.publicKey;
+  transaction.recentBlockhash = PublicKey.unique().toBase58();
+  transaction.sign(payer);
+  assert(transaction.serialize().length <= 1_232, `fixture transaction is ${transaction.serialize().length} bytes`);
 });
 
 test("real proof receipt and proof-backed issuance transactions fit Solana's limit", async () => {
@@ -55,6 +83,7 @@ test("real proof receipt and proof-backed issuance transactions fit Solana's lim
     coverage: 50_000_000n,
     premium: 26_940_150n,
     expiresAt: 2_000_000_000n,
+    fixtureId: 18_237_038n,
     validatedOddsMessageKey: oddsMessageKey(proof.odds.MessageId),
   });
   issueTx.feePayer = payer.publicKey;
