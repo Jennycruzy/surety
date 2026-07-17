@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "build": "npm run build --workspace @surety-tx/txline-verify && next build",
     "build:web": "next build",
     "start": "next start",
     "record": "node --import tsx services/feed-ingest/src/cli.ts",
