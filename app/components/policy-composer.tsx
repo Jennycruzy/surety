@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicKey } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { requestQuote, type QuoteResult } from "../lib/quote-action.js";
@@ -24,6 +25,18 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issued, setIssued] = useState<{ policy: string; signature: string } | null>(null);
+  const [shared, setShared] = useState<string | null>(null);
+
+  async function shareAsBroker() {
+    if (!publicKey) return;
+    const action = new URL("/api/actions/coverage", window.location.origin);
+    action.searchParams.set("outcome", outcome);
+    action.searchParams.set("coverage", coverage);
+    action.searchParams.set("broker", publicKey.toBase58());
+    const dial = `https://dial.to/?action=${encodeURIComponent(`solana-action:${action}`)}`;
+    await navigator.clipboard.writeText(dial);
+    setShared(dial);
+  }
 
   async function getQuote() {
     setError(null);
@@ -46,6 +59,9 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
     setSubmitting(true);
     try {
       const nonce = BigInt(Date.now());
+      const brokerRaw = new URLSearchParams(window.location.search).get("broker");
+      const broker = brokerRaw ? new PublicKey(brokerRaw) : undefined;
+      if (broker?.equals(publicKey)) throw new Error("self-referral is not allowed");
       const issueInput = {
         holder: publicKey,
         payoutAuthority: publicKey,
@@ -58,6 +74,7 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
         coverage: BigInt(quote.coverage),
         premium: BigInt(quote.premium!),
         expiresAt: BigInt(Math.floor(Date.now() / 1000) + EXPIRY_SECONDS),
+        broker,
       };
       const tx = quote.validatedOddsMessageKeyHex
           ? await buildIssuePolicyWithValidatedOddsTx(connection, {
@@ -117,6 +134,13 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
       </div>
 
       {error && <div className="notice error">{error}</div>}
+
+      <div className="actionrow">
+        <button className="secondary-btn" onClick={shareAsBroker} disabled={!publicKey}>
+          {publicKey ? "Share as broker link" : "Connect wallet to share as broker"}
+        </button>
+      </div>
+      {shared && <div className="notice success">Broker Action link copied. You earn 5% of premium bound through it, paid on-chain at issuance.</div>}
 
       {!quote && !issued && (
         <div className="actionrow">

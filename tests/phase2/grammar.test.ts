@@ -8,6 +8,7 @@ const valid = [
   "stat(18218149,corners_home) >= 5",
   "stat(18218149,red_cards_away) == 0",
   "stat(18237038,goals_home) >= 1 AND stat(18237038,goals_total) <= 4",
+  "stat(18218149,HT,goals_home) > 0",
 ];
 
 test("text -> canonical bytes -> text round trips", () => {
@@ -32,6 +33,8 @@ test("illegal and unproven fields are rejected with human-readable reasons", () 
   assert.throws(() => compilePredicate("tournament_result(MAR) == WINNER"), /unsettleable.*stage-tag/i);
   assert.throws(() => compilePredicate("decided_by(1) == PENALTIES"), /unsettleable.*decision-method/i);
   assert.throws(() => compilePredicate("weather(1) == RAIN"), /illegal field/i);
+  assert.throws(() => compilePredicate("stat(1,ET,goals_home) > 0"), /not admitted.*provability matrix/i);
+  assert.throws(() => compilePredicate("stat(1,HT,corners_home) > 2"), /proof-backed but unpriceable/i);
 });
 
 test("invalid operators, values, duplicates, and excessive compounds are rejected", () => {

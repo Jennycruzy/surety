@@ -7,7 +7,7 @@ import {
   assertProofMatchesPacket,
   type RawOddsValidation,
   validateOddsOnDevnet,
-} from "./txline.js";
+} from "@surety/txline-verify";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);

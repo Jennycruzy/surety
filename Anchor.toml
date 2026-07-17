@@ -22,5 +22,5 @@ members = ["programs/surety_core"]
 test = "npm run test:phase3"
 
 [test.validator]
-rpc_port = 18899
-faucet_port = 19900
+rpc_port = 28899
+faucet_port = 29900

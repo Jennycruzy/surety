@@ -36,7 +36,9 @@ export function settlementPayloadFromProof(proof: RawV2Proof, opts: { tamperMain
     mainTreeProof[0] = { ...first, hash };
   }
   return {
-    ts: new BN(proof.ts),
+    // TxLINE's validator seeds the daily batch from minTimestamp. The API top-level
+    // timestamp can be maxTimestamp when a phase-finalization proof spans updates.
+    ts: new BN(proof.summary.updateStats.minTimestamp),
     fixtureSummary: {
       fixtureId: new BN(proof.summary.fixtureId),
       updateStats: {

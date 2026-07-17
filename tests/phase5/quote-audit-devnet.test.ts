@@ -81,7 +81,7 @@ test("ten issued policies audit against deterministic committed quote inputs", a
     provider,
     payer,
     await program.methods
-      .initializeVault([...vaultId], 3_000, new BN(172_800), 15_000, 1)
+      .initializeVault([...vaultId], 3_000, new BN(172_800), 15_000, 1, 500)
       .accountsStrict({ authority: payer.publicKey, vault, assetMint, reserve, shareMint, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId })
       .transaction(),
   );
@@ -149,7 +149,7 @@ test("ten issued policies audit against deterministic committed quote inputs", a
           premium: new BN(quote.premium!),
           expiresAt: new BN(now + 86_400),
         })
-        .accountsStrict({ holder: payer.publicKey, vault, assetMint, reserve, holderAssetAccount: holderAssets.address, bucket, policy, policyEscrow, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId })
+        .accountsStrict({ holder: payer.publicKey, vault, assetMint, reserve, holderAssetAccount: holderAssets.address, brokerAssetAccount: null, bucket, policy, policyEscrow, tokenProgram: TOKEN_PROGRAM_ID, systemProgram: SystemProgram.programId })
         .transaction(),
     );
     const onChain = await program.account.policy.fetch(policy);

@@ -1,6 +1,5 @@
-import { PacketBus } from "../../shared/src/packet-bus.js";
+import { PacketBus, recordStream, writeManifest } from "@surety/txline-verify";
 import { createGuestJwt, loadApiToken } from "./auth.js";
-import { recordStream, writeManifest } from "./recorder.js";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);

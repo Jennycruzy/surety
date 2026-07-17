@@ -89,7 +89,7 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   real deployed devnet validator, including a correct rejection of a one-bit-tampered
   copy) was unaffected and remains genuine.
 - **Attempted:** Re-authenticated against TxLINE devnet (`X-Api-Token` + guest JWT,
-  same pattern as `services/feed-ingest/src/recorder.ts`) to re-capture a genuine
+  same pattern now extracted to `packages/txline-verify/src/recorder.ts`) to re-capture a genuine
   replacement proof for the same fixture/sequence. Authentication succeeded, but the
   exact request shape for `GET /api/scores/stat-validation` (query parameters or body
   identifying which stat predicate to prove) is not pinned anywhere in this repo's
@@ -155,3 +155,35 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   `sha256("match:<fixture>:<outcome>")` on-chain and rejects any other bucket. The local
   lifecycle submits the former attack and verifies atomic rejection.
 - **Status:** Fixed before devnet deployment.
+
+## 2026-07-17 — Stat proof timestamp field is ambiguous
+
+- **Observed:** The stat-validation API returned both a top-level `ts` and
+  `summary.updateStats.minTimestamp`. Building `StatValidationInput.timestamp` from `ts`
+  produced TxLINE `TimestampMismatch` (6010), even though the proof was otherwise intact.
+- **Impact:** A structurally valid halftime proof failed the deployed validator until the
+  CPI payload used the timestamp committed by the stat summary.
+- **Resolution:** The converter now passes `summary.updateStats.minTimestamp`; the same
+  authentic key-2001 proof then passed `validate_stat_v2` and settled a halftime SURETY
+  policy on devnet. The fix lives in the extracted `@surety/txline-verify` package so future
+  TxLINE developers do not have to rediscover it. The companion `txline-cpi` crate packages
+  the pinned CPI wire types. Registry targets:
+  [npm](https://www.npmjs.com/package/@surety/txline-verify) and
+  [crates.io](https://crates.io/crates/txline-cpi); publication is pending maintainer
+  credentials, so this entry does not claim the registry artifacts are live yet.
+- **Status:** Integration fixed and regression-tested; public-package gate pending auth.
+
+## 2026-07-17 — Period proof coverage exceeds the documented market map
+
+- **Observed:** Authenticated probes across two recorded fixtures returned verifiable proof
+  structures for all 48 tested combinations of prefixes 1000/2000/3000 and base keys 1–8,
+  including halftime goals at keys 2001/2002. Goal timestamps had no confirmed stat key,
+  while penalties/shootouts appeared only in raw events with no known validation route.
+- **Impact:** Cryptographic settleability alone cannot define the product grammar: some
+  period stats still lack a deterministic consensus market for premium calculation.
+- **Resolution:** `docs/provability-matrix.json` generates the proof menu, and the compiler
+  applies a separate captured-market pricing gate. Goal timestamps and
+  `decided_by = PENALTIES` are explicit designed refusals rather than inferred promises.
+- **Extension request:** Document a validated goal-timestamp key/path and expose a
+  validator-backed shootout decision field, plus publish the period-key/market mapping.
+- **Status:** Probe and halftime settlement complete; unsupported claims remain excluded.

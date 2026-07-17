@@ -1,0 +1,35 @@
+{
+  "name": "@surety/txline-verify",
+  "version": "0.1.0",
+  "description": "Verify, record, and deterministically replay TxLINE data",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jennycruzy/surety.git",
+    "directory": "packages/txline-verify"
+  },
+  "keywords": ["txline", "txodds", "solana", "sports-data"],
+  "files": ["dist", "README.md", "examples"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@anchor-lang/core": "1.0.2",
+    "@solana/web3.js": "1.98.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

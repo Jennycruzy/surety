@@ -113,7 +113,7 @@ test("fully collateralized lifecycle enforces bucket cap and unlocks only on exp
 
   console.log("STEP: initializing vault");
   const initializeTransaction = await program.methods
-    .initializeVault([...vaultId], 2_000, new BN(2), 15_000, 1)
+    .initializeVault([...vaultId], 2_000, new BN(2), 15_000, 1, 500)
     .accountsStrict({
       authority: payer.publicKey,
       vault,
@@ -181,6 +181,7 @@ test("fully collateralized lifecycle enforces bucket cap and unlocks only on exp
       assetMint,
       reserve,
       holderAssetAccount: lpAssets.address,
+      brokerAssetAccount: null,
       bucket,
       policy,
       policyEscrow,
@@ -229,6 +230,7 @@ test("fully collateralized lifecycle enforces bucket cap and unlocks only on exp
         assetMint,
         reserve,
         holderAssetAccount: lpAssets.address,
+        brokerAssetAccount: null,
         bucket,
         policy: rejectedPolicy,
         policyEscrow: rejectedEscrow,
@@ -278,9 +280,88 @@ test("fully collateralized lifecycle enforces bucket cap and unlocks only on exp
   assert.equal(escrowAfterExpiry.amount, 0n);
   assert.deepEqual(expiredPolicy.status, { expired: {} });
 
+  const broker = Keypair.generate();
+  const brokerAssets = await getOrCreateAssociatedTokenAccount(connection, payer, assetMint, broker.publicKey);
+  const brokerCompiled = compilePredicate("outcome(18237038) == DRAW");
+  const brokerPredicateBytes = Buffer.alloc(32);
+  brokerPredicateBytes.set(brokerCompiled.canonicalBytes);
+  const brokerPredicateHash = Buffer.from(brokerCompiled.hash, "hex");
+  const brokerBucketHash = digest("match:18237038:DRAW");
+  const brokerBucket = pda(Buffer.from("bucket"), vault.toBuffer(), brokerBucketHash);
+  const brokerNonce = 2n;
+  const brokerPolicy = pda(Buffer.from("policy"), vault.toBuffer(), payer.publicKey.toBuffer(), brokerPredicateHash, u64(brokerNonce));
+  const brokerEscrow = pda(Buffer.from("policy_escrow"), brokerPolicy.toBuffer());
+  const brokerIssue = await program.methods
+    .issuePolicy({
+      nonce: new BN(brokerNonce.toString()),
+      predicateLen: brokerCompiled.canonicalBytes.length,
+      predicateBytes: [...brokerPredicateBytes],
+      predicateHash: [...brokerPredicateHash],
+      quoteHash: [...digest("phase3:broker-quote")],
+      bucketHash: [...brokerBucketHash],
+      payoutAuthority: payer.publicKey,
+      coverage: new BN(50 * SCALE),
+      premium: new BN(10 * SCALE),
+      expiresAt: new BN(expiresAt + 3_600),
+    })
+    .accountsStrict({
+      holder: payer.publicKey,
+      vault,
+      assetMint,
+      reserve,
+      holderAssetAccount: lpAssets.address,
+      brokerAssetAccount: brokerAssets.address,
+      bucket: brokerBucket,
+      policy: brokerPolicy,
+      policyEscrow: brokerEscrow,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .transaction();
+  const brokerSignature = await submitTransaction(connection, payer, brokerIssue);
+  const brokerBalance = await retryRead("broker balance", () => getAccount(connection, brokerAssets.address));
+  const brokerVault = await retryRead("broker vault", () => program.account.vault.fetch(vault));
+  assert.equal(brokerBalance.amount, 500_000n, "broker receives 5% of gross premium");
+  assert.equal(brokerVault.totalCapital.toString(), String(1_019_500_000), "vault capital grows by net premium only");
+  assert.equal(brokerVault.freeReserves.toString(), String(969_500_000), "free reserves use net-premium accounting");
+
+  const selfNonce = 3n;
+  const selfPolicy = pda(Buffer.from("policy"), vault.toBuffer(), payer.publicKey.toBuffer(), brokerPredicateHash, u64(selfNonce));
+  const selfReferral = await program.methods
+    .issuePolicy({
+      nonce: new BN(selfNonce.toString()),
+      predicateLen: brokerCompiled.canonicalBytes.length,
+      predicateBytes: [...brokerPredicateBytes],
+      predicateHash: [...brokerPredicateHash],
+      quoteHash: [...digest("phase3:self-referral")],
+      bucketHash: [...brokerBucketHash],
+      payoutAuthority: payer.publicKey,
+      coverage: new BN(1 * SCALE),
+      premium: new BN(1 * SCALE),
+      expiresAt: new BN(expiresAt + 3_600),
+    })
+    .accountsStrict({
+      holder: payer.publicKey,
+      vault,
+      assetMint,
+      reserve,
+      holderAssetAccount: lpAssets.address,
+      brokerAssetAccount: lpAssets.address,
+      bucket: brokerBucket,
+      policy: selfPolicy,
+      policyEscrow: pda(Buffer.from("policy_escrow"), selfPolicy.toBuffer()),
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .transaction();
+  const selfReferralSignature = await submitTransaction(connection, payer, selfReferral, [], true);
+  assert.equal(await retryRead("self-referral policy", () => connection.getAccountInfo(selfPolicy)), null);
+
   console.log(`PASS: LP deposit locked ${1_000} test USDC (${depositSignature})`);
   console.log(`PASS: policy escrow locked ${100} test USDC (${issueSignature})`);
   console.log(`PASS: same-outcome policy above the 20% bucket cap was rejected atomically (${rejectedSignature})`);
   console.log(`PASS: permissionless expiry restored escrow to free reserves (${expirySignature})`);
+  console.log(`PASS: broker received 5% while the vault booked net premium (${brokerSignature})`);
+  console.log(`PASS: self-referral was rejected atomically (${selfReferralSignature})`);
   console.log(`EVIDENCE: test-USDC mint ${assetMint.toBase58()}, vault ${vault.toBase58()}, policy ${policy.toBase58()}`);
 });

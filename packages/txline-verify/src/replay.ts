@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
-import { PacketBus, type FeedChannel } from "../../shared/src/packet-bus.js";
-import { SseFrameDecoder } from "../../shared/src/sse.js";
+import { PacketBus, type FeedChannel } from "./packet-bus.js";
+import { SseFrameDecoder } from "./sse.js";
 
 export type ReplayOptions = {
   log: string;

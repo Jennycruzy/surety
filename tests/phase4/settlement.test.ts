@@ -133,7 +133,7 @@ test("real TxLINE CPI atomically settles and a one-bit proof mutation fails", as
     provider,
     payer,
     await program.methods
-      .initializeVault([...vaultId], 5_000, new BN(172_800), 15_000, 1)
+      .initializeVault([...vaultId], 5_000, new BN(172_800), 15_000, 1, 500)
       .accountsStrict({
         authority: payer.publicKey,
         vault,
@@ -216,6 +216,7 @@ test("real TxLINE CPI atomically settles and a one-bit proof mutation fails", as
         assetMint,
         reserve,
         holderAssetAccount: holderAssets.address,
+        brokerAssetAccount: null,
         bucket,
         policy,
         policyEscrow,

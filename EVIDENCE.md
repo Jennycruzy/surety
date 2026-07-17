@@ -1,5 +1,9 @@
 # SURETY Evidence
 
+- **Live app:** https://surety-tx.vercel.app
+- **Program (devnet):** `3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW`
+- **TxLINE validator (devnet):** `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J`
+
 Evidence is recorded only after a gate is actually satisfied. A documented design or
 an unexecuted test is not counted as proof.
 
@@ -373,3 +377,77 @@ Pending Gate 8.
 The marker is deterministic and hash-chained. The next integration step is posting
 these compact records through the on-chain `post_attestation` instruction alongside
 the settlement CPI.
+
+## GATE 10A — TxLINE SDK extraction
+
+- PASS — The verification/record/replay implementation was moved into the npm workspace
+  `packages/txline-verify`; all SURETY services import `@surety/txline-verify`, and no second
+  service copy remains. `npm test` builds that package before running the full suite.
+- PASS — The TxLINE CPI wire types/helpers were moved into `crates/txline-cpi`; the Anchor
+  program depends on exact version `0.1.0` through its workspace path. `cargo test
+  --workspace --all-targets` and both examples pass.
+- PASS — `npm pack --dry-run` and `cargo publish --dry-run -p txline-cpi --allow-dirty`
+  validate the publish contents. `scripts/verify-published-txline.mjs` is wired into
+  `make verify-sdk` and will install exact public versions into a temporary directory,
+  compare verification of a committed packet to the workspace result, and check the crate.
+- BLOCKED (external credentials) — `npm whoami` returns `ENEEDAUTH`, and no crates.io token
+  is installed. Therefore neither registry URL nor the registry-install integrity check is
+  claimed PASS. Publish `0.1.0` with maintainer credentials, then run `make verify-sdk` to
+  close this gate; the repository explicitly refuses to substitute a local tarball.
+
+## GATE 10B — On-chain broker commission
+
+- PASS — Program `3e5r…v8qVW` was upgraded in
+  [`4sTz…JFe7s`](https://explorer.solana.com/tx/4sTzQ6Gg4S3vPutQXhL7oWkGPbc1FLYzryQprxp7d7cKFzPRaQQp9wXc3ZtkkrnfnrPp9cueq6C7T9Q7HcKJFe7s?cluster=devnet).
+  The local 541,960-byte release binary hashes to
+  `6dcc0919a99fb94ebc9af7959a4123e699a66c6b3cd6bf83451e50ac939dc1fe`; those exact leading
+  bytes match the larger preallocated program-data account.
+- PASS — Broker issuance
+  [`5iZJ…poqkdJ`](https://explorer.solana.com/tx/5iZJ5HtxbQukdcYjqtQzb5ihXKKLbhTVY92xhHfJYy3qX7HQYutBUSjfR5bzMethihHSYSpk9RGV1aUcW3poqkdJ?cluster=devnet)
+  atomically transfers 500,000 units to the broker and the 9,500,000-unit net premium to
+  reserve. Vault `7fRen…FZdpp` increments capital/free reserves by the net amount only and
+  emits `BrokerCommissionPaid`.
+- PASS — No-broker issuance
+  [`k3xu…Gmfs`](https://explorer.solana.com/tx/k3xug6tk84xErkNSecZpWjJ7LdoqScWizU6iSTUuZDtnwdvjouHK8XMZuCTjBu3eV3sgEmX3SxxU97pSD2zGmfs?cluster=devnet)
+  retains the original single gross-premium transfer behavior.
+- PASS — Self-referral
+  [`bk1H…W3A`](https://explorer.solana.com/tx/bk1HWj7bp6UjeAbMozbyiWWrhbvkJxKLpRV2qMkjP93xL6W5FaWZRCmDL6WnzzsQYdZcASD7HxgNoHkkuqrzW3A?cluster=devnet)
+  is rejected atomically; no policy or token movement is created.
+- PASS — The invariant/local lifecycle covers broker split, integer rounding, net accounting,
+  no-broker regression, expiry, capacity rejection, and reconciliation. The Solana Action
+  route carries `?broker=<pubkey>` into the optional same-mint token account, and the composer
+  creates dial.to broker links. Recording the final fresh-wallet dial.to bind remains a human
+  wallet/demo artifact.
+
+## GATE 10C — Period-scoped proof and halftime settlement
+
+- PASS — `docs/provability-matrix.json` and `docs/PROVABILITY_MATRIX.md` record 48 authenticated
+  requests across two captured fixtures (prefixes 1000/2000/3000 × base keys 1–8), with raw
+  halftime proof artifacts for keys 2001/2002. `npm run check:provability-matrix` reports
+  `PASS: grammar menu matches 48 committed provability probes`.
+- PASS — The deployed TxLINE validator directly accepted authentic fixture `18218149`,
+  sequence 522, halftime key 2001. This exposed and fixed a real integration issue: CPI
+  timestamp must use `summary.updateStats.minTimestamp`, not the response's top-level `ts`.
+- PASS — Halftime policy
+  [`6zby…BWU6D`](https://explorer.solana.com/address/6zby7AzkpSbpernkAnxs7bHSBemQhspdzU4pwq4BWU6D?cluster=devnet)
+  was issued in
+  [`53SQ…KApT`](https://explorer.solana.com/tx/53SQGfFVthArSFa3qbUHtoVnaLLZ9tUWFSdygDA7LXKpdKehzSsKRL8Q1sDsZwDWok6X2Sd84eXtWc7yRhNaKApT?cluster=devnet)
+  and settled through standard `validate_stat_v2` CPI at the halftime sequence in
+  [`5oAE…sG1E`](https://explorer.solana.com/tx/5oAEpxzLcVSd62eFxH9r6aoMjjYE5xuBEwu9uVqR7mZF3GSq4b3iD96ewuYakP4JXFgUNTgKFCt11i5f6UrcsG1E?cluster=devnet),
+  while the recorded match contains later second-half events.
+- PASS — Compiler tests cover a priced HT predicate, a proof-backed but unpriceable period
+  stat, and an unprobed period. Goal timestamps and penalties/shootouts are documented
+  refusals because the probe found no known on-chain validation path.
+
+## Post-Phase-10 redeploy regression
+
+- PASS — Fresh authentic final settlement after the upgrade:
+  [`3ZYr…AiKMc`](https://explorer.solana.com/tx/3ZYrGWX1wNHy1ompWH7jL4pw8V6XwBYtkEGVGTMB8EBQcCMsAZKuMaXrfRu8EdsnaT93GeoMjq37euHYkrvAiKMc?cluster=devnet).
+  Fresh one-bit mutation rejection:
+  [`5X2j…YNgxRN`](https://explorer.solana.com/tx/5X2jyajSZbmWPWTu1tE38ocDitv2q8CwpjXUV85pKiWJygLD6Sa6fvrp9AfyCTMF2KtoRNsDafos3xgsHqYNgxRN?cluster=devnet).
+- PASS — Phase 5 re-audited ten issued quote hashes on upgraded-layout vault
+  `CYEJ9bPaxGoDhrZ6vk4ha254GbShiCpdYtCq5uQVkVEf`, including ACCEPT, SURCHARGE, and REJECT.
+- PASS — Fresh open settlement-demo policy
+  [`Axs7…UUon`](https://explorer.solana.com/address/Axs7Tf6B2DbsDQ3EwLF4tvVrmhkb39hPR5FbrjUeUUon?cluster=devnet)
+  uses the upgraded layout; its sibling settled through TxLINE in
+  [`2oeC…y3Px`](https://explorer.solana.com/tx/2oeCnxWzmDExhLDYNE7BMgu9kqhEVLrW2s26sFeaD9c2gZHUTKcdzGJABMa4XJVQmMPL4WAFUzY7VCmCMrp4y3Px?cluster=devnet).

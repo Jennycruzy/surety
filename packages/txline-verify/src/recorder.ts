@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { PacketBus, type FeedChannel } from "../../shared/src/packet-bus.js";
-import { SseFrameDecoder } from "../../shared/src/sse.js";
+import { PacketBus, type FeedChannel } from "./packet-bus.js";
+import { SseFrameDecoder } from "./sse.js";
 
 export type RecordOptions = {
   apiOrigin: string;

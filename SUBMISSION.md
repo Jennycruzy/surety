@@ -27,11 +27,18 @@ TxLINE consensus odds and written to a tamper-evident, hash-chained on-chain bal
 - **Deterministic, verifiable pricing.** Premiums are a pure fixed-point function of one
   recorded TxLINE StablePrice packet and live vault state; the inputs are committed by an
   on-chain quote hash anyone can recompute.
-- **Reproducible program.** The deployed SBF binary hashes to
-  `afd0962c90732c7cdcc624bf753ed36066364fa902648a5e1b7cbc3607ef95cd`, matching both a fresh
-  `anchor build` and a live on-chain dump — byte for byte.
+- **Reproducible program.** The current 541,960-byte deployed SBF payload hashes to
+  `6dcc0919a99fb94ebc9af7959a4123e699a66c6b3cd6bf83451e50ac939dc1fe`; those exact leading
+  bytes match the live program-data account (whose unused preallocated tail is zero-filled).
 - **Fully collateralized vault** with LP shares, per-outcome exposure-bucket caps,
   policy-specific SPL escrows, epoch-gated withdrawals, and permissionless expiry.
+- **Trustless broker distribution.** A coverage link can bind a broker-of-record token
+  account. At issuance the program atomically routes 5% of the validated premium to that
+  broker and the net premium to carrier reserves; no-broker remains backward compatible,
+  and self-referral is rejected.
+- **Period-scoped products.** Predicate availability is generated from an authenticated
+  TxLINE provability matrix. A halftime-goals policy has settled on devnet at the halftime
+  sequence while later second-half events remained in the replay.
 - **Glass balance sheet:** a ten-record hash chain posted on devnet, each record committing
   the prior hash, raw odds-packet hash, book snapshot, reserves, liabilities, and solvency
   ratio; `verify-chain` matches every local field to every on-chain account.
@@ -52,13 +59,13 @@ TxLINE consensus odds and written to a tamper-evident, hash-chained on-chain bal
 | On-chain `subscribe(serviceLevelId, durationWeeks)` | devnet | Activated the free World Cup tier |
 | `POST /auth/guest/start` | `services/feed-ingest/src/auth.ts` | Guest JWT for data access |
 | `POST /api/token/activate` | auth flow | Activated the API token |
-| `GET /api/odds/stream` | `services/feed-ingest/src/recorder.ts` | Live consensus odds capture |
+| `GET /api/odds/stream` | `packages/txline-verify/src/recorder.ts` | Live consensus odds capture |
 | `GET /api/scores/stream` | recorder | Live score-event capture |
 | `GET /api/odds/snapshot/{fixtureId}` | capture | Full-match odds snapshot used by the quote engine |
 | `GET /api/scores/snapshot/{fixtureId}` | capture | Score snapshot |
 | `GET /api/scores/historical/{fixtureId}` | capture | Historical score transcript |
 | `GET /api/scores/stat-validation` (V2) | capture | The authentic final-outcome Merkle proof |
-| On-chain `validate_stat_v2` (TxLINE program) | `programs/surety_core/src/lib.rs` CPI | The atomic settlement oracle |
+| On-chain `validate_stat_v2` (TxLINE program) | `crates/txline-cpi` + `programs/surety_core/src/lib.rs` | The atomic settlement oracle |
 
 Exact interfaces, discriminators, and captured schemas are pinned in `docs/GROUND_TRUTH.md`.
 
@@ -72,9 +79,9 @@ the free World Cup tier made real end-to-end testing possible.
 
 **Where we hit friction** (full dated log in `docs/FRICTION_LOG.md`):
 
-- The exact request shape for `GET /api/scores/stat-validation` was not pinned in the docs
-  we had, which made re-capturing a genuine proof for a specific fixture/sequence hard —
-  we chose to remove an unverifiable capture rather than guess.
+- The stat-validation response exposes both a top-level timestamp and the stat summary's
+  minimum timestamp. Only `summary.updateStats.minTimestamp` satisfies the deployed
+  validator; using the plausible top-level field fails with `TimestampMismatch`.
 - `GET /api/scores/historical/{fixtureId}` returns an SSE transcript, but the rendered
   streaming guide treats the response like a JSON array — a client following it literally
   breaks. We reused the SSE parser and kept the raw bytes for checksums.
@@ -85,9 +92,21 @@ the free World Cup tier made real end-to-end testing possible.
 
 These were all workable, and none were blockers to shipping the atomic-settlement thesis.
 
+The friction we hit integrating the proof timestamp and CPI wire format is now packaged as
+[`@surety/txline-verify`](https://www.npmjs.com/package/@surety/txline-verify) and
+[`txline-cpi`](https://crates.io/crates/txline-cpi), so future TxLINE developers can skip it.
+The repository already consumes those extracted workspaces; registry publication and the
+public-install integrity gate remain pending maintainer npm/crates credentials and are not
+claimed complete.
+
+The period probe also produced two concrete TxLINE extension requests: document a
+validator-backed goal-timestamp key/path, and expose penalties/shootout decision through an
+on-chain validation path. Until then SURETY deliberately refuses time-bound predicates and
+`decided_by = PENALTIES` rather than deriving them from unvalidated raw events.
+
 ## Links
 
-- **Public repo:** _(add your GitHub URL)_
-- **Deployed app / devnet endpoint:** _(see `DEPLOY.md`; the program is live on devnet at
-  `3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW`)_
-- **Demo video:** _(add your Loom/YouTube URL; see `DEMO_SCRIPT.md`)_
+- **Public repo:** https://github.com/Jennycruzy/surety
+- **Deployed app:** https://surety-tx.vercel.app
+- **Program (devnet):** `3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW`
+- **Demo video:** _(add your Loom/YouTube URL; scene-by-scene script in `DEMO_SCRIPT.md`)_

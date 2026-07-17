@@ -88,7 +88,7 @@ async function main() {
     console.log("INIT: creating demo vault", vault.toBase58());
     await submit(
       await program.methods
-        .initializeVault([...vaultId], 5_000, new BN(172_800), 15_000, 1)
+        .initializeVault([...vaultId], 5_000, new BN(172_800), 15_000, 1, 500)
         .accountsStrict({
           authority: payer.publicKey,
           vault,
@@ -157,6 +157,7 @@ async function main() {
           assetMint: ASSET_MINT,
           reserve,
           holderAssetAccount: assetAta.address,
+          brokerAssetAccount: null,
           bucket,
           policy,
           policyEscrow,

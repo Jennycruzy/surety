@@ -78,6 +78,7 @@ export type IssuePolicyInput = {
   coverage: bigint;
   premium: bigint;
   expiresAt: bigint;
+  broker?: PublicKey | undefined;
 };
 
 export async function buildIssuePolicyTx(connection: Connection, input: IssuePolicyInput): Promise<Transaction> {
@@ -86,6 +87,7 @@ export async function buildIssuePolicyTx(connection: Connection, input: IssuePol
   input.predicateBytes.copy(padded);
   const policy = policyPda(input.holder, input.predicateHash, input.nonce);
   const { ata: holderAssetAccount, instruction: ensureHolderAta } = ensureAtaIx(input.holder, input.holder);
+  const broker = input.broker ? ensureAtaIx(input.holder, input.broker) : undefined;
   const tx = await program.methods
     .issuePolicy({
       nonce: new BN(input.nonce.toString()),
@@ -105,13 +107,14 @@ export async function buildIssuePolicyTx(connection: Connection, input: IssuePol
       assetMint: ASSET_MINT,
       reserve: reservePda(),
       holderAssetAccount,
+      brokerAssetAccount: broker?.ata ?? null,
       bucket: bucketPda(input.bucketHash),
       policy,
       policyEscrow: policyEscrowPda(policy),
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     })
-    .preInstructions([ensureHolderAta])
+    .preInstructions([ensureHolderAta, ...(broker ? [broker.instruction] : [])])
     .transaction();
   return tx;
 }
@@ -125,6 +128,7 @@ export async function buildIssuePolicyWithValidatedOddsTx(
   input.predicateBytes.copy(padded);
   const policy = policyPda(input.holder, input.predicateHash, input.nonce);
   const { ata: holderAssetAccount, instruction: ensureHolderAta } = ensureAtaIx(input.holder, input.holder);
+  const broker = input.broker ? ensureAtaIx(input.holder, input.broker) : undefined;
   return program.methods
     .issuePolicyWithValidatedOdds({
       nonce: new BN(input.nonce.toString()),
@@ -144,6 +148,7 @@ export async function buildIssuePolicyWithValidatedOddsTx(
       assetMint: ASSET_MINT,
       reserve: reservePda(),
       holderAssetAccount,
+      brokerAssetAccount: broker?.ata ?? null,
       bucket: bucketPda(input.bucketHash),
       policy,
       policyEscrow: policyEscrowPda(policy),
@@ -152,7 +157,7 @@ export async function buildIssuePolicyWithValidatedOddsTx(
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
     })
-    .preInstructions([ensureHolderAta])
+    .preInstructions([ensureHolderAta, ...(broker ? [broker.instruction] : [])])
     .transaction();
 }
 

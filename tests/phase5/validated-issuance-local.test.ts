@@ -23,7 +23,7 @@ import {
   oddsMessageKey,
   type RawFixtureValidation,
   type RawOddsValidation,
-} from "../../services/odds-validation/src/txline.js";
+} from "@surety/txline-verify";
 import type { TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";
 import type { SuretyCore } from "../../target/types/surety_core.js";
 
@@ -76,7 +76,7 @@ test("TxLINE fixture CPI -> odds CPI -> proof-backed issuance lifecycle", async 
     provider,
     payer,
     await program.methods
-      .initializeVault([...vaultId], 2_000, new BN(60), 15_000, 2)
+      .initializeVault([...vaultId], 2_000, new BN(60), 15_000, 2, 500)
       .accountsStrict({
         authority: payer.publicKey,
         vault,
@@ -203,6 +203,7 @@ test("TxLINE fixture CPI -> odds CPI -> proof-backed issuance lifecycle", async 
           assetMint,
           reserve,
           holderAssetAccount: holderAssets,
+          brokerAssetAccount: null,
           bucket,
           policy: legacyPolicy,
           policyEscrow: pda(program.programId, Buffer.from("policy_escrow"), legacyPolicy.toBuffer()),
@@ -254,6 +255,7 @@ test("TxLINE fixture CPI -> odds CPI -> proof-backed issuance lifecycle", async 
           assetMint,
           reserve,
           holderAssetAccount: holderAssets,
+          brokerAssetAccount: null,
           bucket: maliciousBucket,
           policy: maliciousPolicy,
           policyEscrow: pda(program.programId, Buffer.from("policy_escrow"), maliciousPolicy.toBuffer()),
@@ -280,6 +282,7 @@ test("TxLINE fixture CPI -> odds CPI -> proof-backed issuance lifecycle", async 
       assetMint,
       reserve,
       holderAssetAccount: holderAssets,
+      brokerAssetAccount: null,
       bucket,
       policy,
       policyEscrow,

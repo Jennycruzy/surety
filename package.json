@@ -2,6 +2,9 @@
   "name": "surety",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -12,17 +15,23 @@
     "start": "next start",
     "record": "node --import tsx services/feed-ingest/src/cli.ts",
     "replay": "node --import tsx services/replay/src/cli.ts",
-    "test": "node scripts/test-suite.mjs",
+    "test": "npm run build --workspace @surety/txline-verify && node scripts/test-suite.mjs",
     "typecheck": "tsc --noEmit",
     "verify:local": "npm test && npm run typecheck && npm run build:web",
+    "verify:published-sdk": "node scripts/verify-published-txline.mjs",
     "predicate": "node --import tsx services/predicate/src/cli.ts",
     "audit-quote": "node --import tsx services/quote-engine/src/cli.ts",
     "fetch:odds-proof": "node --import tsx services/odds-validation/src/fetch-cli.ts",
     "fetch:live-proofs": "node --import tsx services/odds-validation/src/fetch-live-cli.ts",
     "validate:odds-proof:devnet": "node --import tsx services/odds-validation/src/validate-cli.ts",
+    "validate:ht-proof:devnet": "node --import tsx services/odds-validation/src/validate-ht-cli.ts",
     "record:validated-odds:devnet": "node --import tsx services/odds-validation/src/record-cli.ts",
     "keeper:odds": "node --import tsx services/odds-validation/src/keeper-cli.ts",
+    "probe:period-stats": "node --import tsx services/odds-validation/src/probe-cli.ts",
+    "check:provability-matrix": "node --import tsx scripts/check-provability-matrix.mjs",
     "setup:validated-market": "node --import tsx scripts/setup-validated-market.ts",
+    "setup:halftime-demo": "node --import tsx scripts/setup-halftime-demo.ts",
+    "setup:settlement-demo": "node --import tsx scripts/setup-settlement-demo.ts",
     "marker": "node --import tsx services/marker/src/cli.ts",
     "test:phase1": "node --import tsx --test tests/phase1/*.test.ts",
     "test:phase3": "node --import tsx --test --test-concurrency=1 tests/phase3/*.test.ts",
@@ -44,6 +53,7 @@
     "typescript": "^5.9.0"
   },
   "dependencies": {
+    "@surety/txline-verify": "0.1.0",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",

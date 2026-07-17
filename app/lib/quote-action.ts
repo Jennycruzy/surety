@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { PublicKey } from "@solana/web3.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
-import { oddsMessageHash, oddsMessageKey } from "../../services/odds-validation/src/txline.js";
+import { oddsMessageHash, oddsMessageKey } from "@surety/txline-verify";
 import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
 import { syncValidatedMarket } from "../../services/odds-validation/src/sync.js";
 import { computeQuote, type BookState, type Outcome, type TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";

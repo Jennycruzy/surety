@@ -261,6 +261,10 @@ export type SuretyCore = {
         {
           "name": "formulaVersion",
           "type": "u16"
+        },
+        {
+          "name": "brokerCommissionBps",
+          "type": "u16"
         }
       ]
     },
@@ -302,6 +306,11 @@ export type SuretyCore = {
         {
           "name": "holderAssetAccount",
           "writable": true
+        },
+        {
+          "name": "brokerAssetAccount",
+          "writable": true,
+          "optional": true
         },
         {
           "name": "bucket",
@@ -452,6 +461,11 @@ export type SuretyCore = {
         {
           "name": "holderAssetAccount",
           "writable": true
+        },
+        {
+          "name": "brokerAssetAccount",
+          "writable": true,
+          "optional": true
         },
         {
           "name": "bucket",
@@ -1234,6 +1248,19 @@ export type SuretyCore = {
       ]
     },
     {
+      "name": "brokerCommissionPaid",
+      "discriminator": [
+        81,
+        255,
+        95,
+        6,
+        69,
+        188,
+        187,
+        110
+      ]
+    },
+    {
       "name": "fixtureValidated",
       "discriminator": [
         233,
@@ -1619,6 +1646,16 @@ export type SuretyCore = {
       "code": 6050,
       "name": "bucketHashMismatch",
       "msg": "bucket hash does not match the policy fixture and outcome"
+    },
+    {
+      "code": 6051,
+      "name": "invalidBrokerCommission",
+      "msg": "broker commission cannot exceed 1,000 basis points"
+    },
+    {
+      "code": 6052,
+      "name": "selfReferral",
+      "msg": "the policy holder cannot receive their own broker commission"
     }
   ],
   "types": [
@@ -1667,6 +1704,30 @@ export type SuretyCore = {
           },
           {
             "name": "solvencyRatioBps",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "brokerCommissionPaid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "broker",
+            "type": "pubkey"
+          },
+          {
+            "name": "commission",
+            "type": "u64"
+          },
+          {
+            "name": "premium",
             "type": "u64"
           }
         ]
@@ -3022,6 +3083,10 @@ export type SuretyCore = {
           },
           {
             "name": "formulaVersion",
+            "type": "u16"
+          },
+          {
+            "name": "brokerCommissionBps",
             "type": "u16"
           }
         ]

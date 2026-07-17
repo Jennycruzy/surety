@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { PublicKey } from "@solana/web3.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
 import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
-import { oddsMessageKey } from "../../services/odds-validation/src/txline.js";
+import { oddsMessageKey } from "@surety/txline-verify";
 import { validatedFixturePda, validatedOddsPda } from "../../app/lib/pda.js";
-import { VAULT } from "../../app/lib/surety-client.js";
 import {
   auditQuote,
   computeQuote,
@@ -89,12 +89,14 @@ test("quote hash changes when packet, book, or coverage changes", () => {
 });
 
 test("verified quote commitment matches the Rust on-chain test vector", () => {
+  // This is a pinned cross-language vector, not the app's mutable live-vault default.
+  const vectorVault = new PublicKey("CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC");
   const validatedOdds = validatedOddsPda(
     oddsMessageKey("1837782566:00003:000791-10021-stab"),
   );
   const validatedFixture = validatedFixturePda(18_237_038n);
   const commitment = verifiedQuoteHash({
-    vault: VAULT,
+    vault: vectorVault,
     validatedFixture,
     validatedOdds,
     fixtureValidationReceiptHash: Buffer.alloc(32, 3),

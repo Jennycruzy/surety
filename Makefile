@@ -1,4 +1,4 @@
-.PHONY: record replay marker verify-chain verify-phase1 verify-phase2 verify-phase3 verify-phase4 verify-phase5 verify-phase6 verify
+.PHONY: record replay marker verify-chain verify-phase1 verify-phase2 verify-phase3 verify-phase4 verify-phase5 verify-phase6 verify-sdk verify
 
 SOLANA_PATH := $(HOME)/.local/share/solana/install/active_release/bin
 CARGO_PATH := $(HOME)/.cargo/bin
@@ -16,6 +16,7 @@ verify-phase1:
 
 verify-phase2:
 	npm test grammar
+	npm run check:provability-matrix
 
 verify-phase3:
 	PATH="$(TOOLCHAIN_PATH)" cargo test -p surety_core --lib
@@ -36,5 +37,8 @@ verify-phase6:
 verify-chain:
 	npm run marker -- --verify-chain data/attestations-gate6.jsonl --rpc https://api.devnet.solana.com
 
-verify: verify-phase1 verify-phase2 verify-phase3 verify-phase4 verify-phase5 verify-phase6
+verify-sdk:
+	npm run verify:published-sdk
+
+verify: verify-phase1 verify-phase2 verify-phase3 verify-phase4 verify-phase5 verify-phase6 verify-sdk
 	@echo "PASS: SURETY verification gates completed"

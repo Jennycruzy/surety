@@ -12,9 +12,26 @@ a failed proof, and no privileged party can force one.
 The protocol is deliberately *glass*: every liability is continuously re-marked from real
 TxLINE consensus odds and written to a tamper-evident, hash-chained on-chain balance sheet.
 
+Insurance has always been sold through commissioned brokers. SURETY models that faithfully:
+any wallet that distributes a coverage link is a broker of record, and the protocol pays
+broker commission on-chain, atomically, at bind time. This is not a growth hack bolted on —
+it is the industry's actual distribution economics made trustless. Commission comes out of
+the validated premium: the buyer's price is unchanged, the carrier reserve receives the net
+premium, and the broker receives 5% in the same transaction.
+
 - **Live app:** https://surety-tx.vercel.app
 - **Program (devnet):** `3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW`
 - **TxLINE validator (devnet):** `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J`
+
+### Build on TxLINE faster
+
+- [`@surety/txline-verify` on npm](https://www.npmjs.com/package/@surety/txline-verify) — connect, verify, record, and replay TxLINE packets.
+- [`txline-cpi` on crates.io](https://crates.io/crates/txline-cpi) — Anchor-compatible types and helpers for one-CPI settlement against `validate_stat_v2`.
+
+Both packages are extracted from the code SURETY runs. The repository consumes the same
+workspace packages, and `make verify-sdk` installs the public artifacts and compares them
+against a committed packet. Registry publication is pending maintainer credentials; the
+links and integrity gate must not be represented as live until that publish succeeds.
 
 ---
 
@@ -48,11 +65,19 @@ Because verification and payout share one transaction, there is no window in whi
 rejected proof can release funds. This is demonstrated on devnet with **both** an authentic
 final-outcome payout **and** a one-bit-tampered proof that TxLINE rejects while the escrow
 stays locked. A dedicated, genuinely settleable demo policy
-(`CpCdFcNkHHjQwW7J4AKyuRZNxusRMi8a6kSKjM2pqXGq`) can be settled by anyone from the app.
+(`Axs7Tf6B2DbsDQ3EwLF4tvVrmhkb39hPR5FbrjUeUUon`) can be settled by anyone from the app.
 
 The deployed SBF binary is reproducible: it hashes to
-`afd0962c90732c7cdcc624bf753ed36066364fa902648a5e1b7cbc3607ef95cd`, matching both a fresh
-`anchor build` and a live on-chain dump, byte for byte.
+`6dcc0919a99fb94ebc9af7959a4123e699a66c6b3cd6bf83451e50ac939dc1fe`.
+The live program-data account is a larger preallocated buffer; its first 541,960 bytes match
+the local release binary exactly, while unused trailing allocation bytes are not part of
+the artifact hash.
+
+Period-scoped predicates are proof-gated from the committed provability matrix. Halftime
+goals use TxLINE keys 2001/2002 and can settle as soon as the halftime phase is anchored;
+an authentic devnet policy has done so while the recorded replay continued. Goal timestamps
+and `decided_by = PENALTIES` remain designed refusals: the former has no confirmed stat key,
+and the latter appears in raw events without a known on-chain validation path.
 
 ## Proof-backed live issuance
 
@@ -120,17 +145,19 @@ A fully collateralized LP vault with:
 ```
 programs/surety_core/    Anchor program: vault, issuance, settlement, TxLINE CPI
   src/lib.rs             Instructions and account state
-  src/txline.rs          Pinned TxLINE CPI interfaces
+
+crates/txline-cpi/       Publishable Rust CPI types/helpers used by surety_core
+packages/txline-verify/  Publishable TypeScript verification/record/replay toolkit
 
 services/                TypeScript services (run via tsx)
-  feed-ingest/           TxLINE auth + live odds/scores recorder
-  replay/                Byte-exact deterministic replay of captures
+  feed-ingest/           TxLINE auth + CLI integration
+  replay/                Replay CLI integration
   predicate/             Settleability-gated predicate compiler
   quote-engine/          Deterministic fixed-point pricing
   odds-validation/       validate_fixture / validate_odds + receipt sync + keeper
   settlement/            Settlement payload construction
   marker/                Hash-chained balance-sheet marker + verify-chain
-  shared/                Shared helpers
+  shared/                SURETY-only shared helpers
 
 app/                     Next.js 16 web app (the "Glass Balance Sheet")
   api/keeper/            Authenticated pre-warm endpoint

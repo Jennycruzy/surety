@@ -255,6 +255,10 @@
         {
           "name": "formula_version",
           "type": "u16"
+        },
+        {
+          "name": "broker_commission_bps",
+          "type": "u16"
         }
       ]
     },
@@ -296,6 +300,11 @@
         {
           "name": "holder_asset_account",
           "writable": true
+        },
+        {
+          "name": "broker_asset_account",
+          "writable": true,
+          "optional": true
         },
         {
           "name": "bucket",
@@ -446,6 +455,11 @@
         {
           "name": "holder_asset_account",
           "writable": true
+        },
+        {
+          "name": "broker_asset_account",
+          "writable": true,
+          "optional": true
         },
         {
           "name": "bucket",
@@ -1228,6 +1242,19 @@
       ]
     },
     {
+      "name": "BrokerCommissionPaid",
+      "discriminator": [
+        81,
+        255,
+        95,
+        6,
+        69,
+        188,
+        187,
+        110
+      ]
+    },
+    {
       "name": "FixtureValidated",
       "discriminator": [
         233,
@@ -1613,6 +1640,16 @@
       "code": 6050,
       "name": "BucketHashMismatch",
       "msg": "bucket hash does not match the policy fixture and outcome"
+    },
+    {
+      "code": 6051,
+      "name": "InvalidBrokerCommission",
+      "msg": "broker commission cannot exceed 1,000 basis points"
+    },
+    {
+      "code": 6052,
+      "name": "SelfReferral",
+      "msg": "the policy holder cannot receive their own broker commission"
     }
   ],
   "types": [
@@ -1661,6 +1698,30 @@
           },
           {
             "name": "solvency_ratio_bps",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BrokerCommissionPaid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "broker",
+            "type": "pubkey"
+          },
+          {
+            "name": "commission",
+            "type": "u64"
+          },
+          {
+            "name": "premium",
             "type": "u64"
           }
         ]
@@ -3016,6 +3077,10 @@
           },
           {
             "name": "formula_version",
+            "type": "u16"
+          },
+          {
+            "name": "broker_commission_bps",
             "type": "u16"
           }
         ]

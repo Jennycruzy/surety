@@ -10,13 +10,12 @@ export const RPC_ENDPOINT =
 export const PROGRAM_ID = new PublicKey("3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW");
 export const TXLINE_PROGRAM_ID = new PublicKey("6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J");
 
-// The live devnet vault Gates 5/6 already quote, issue, and mark against.
-// Phase 7 extends this same protocol state rather than standing up a disconnected demo vault.
+// Phase 10 vault created after the broker-commission account-layout upgrade.
 export const VAULT = new PublicKey(
-  process.env.NEXT_PUBLIC_SURETY_VAULT ?? "CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC",
+  process.env.NEXT_PUBLIC_SURETY_VAULT ?? "7fRenQWU499cbD3bPhfEMXsZThegiAFMCTnYdbLFZdpp",
 );
 export const ASSET_MINT = new PublicKey(
-  process.env.NEXT_PUBLIC_SURETY_ASSET_MINT ?? "FiJfrnLoc2vZmjixZqCEBuWd8A5EuDaF9MZZhd96bpck",
+  process.env.NEXT_PUBLIC_SURETY_ASSET_MINT ?? "9667mqn3XmsLAqDQ4D5qHd27aKscsoZ2jGZK4LoXRuQF",
 );
 export const ASSET_DECIMALS = 6;
 
@@ -38,4 +37,4 @@ export const FAUCET_AMOUNT = 2_000_000_000n; // 2,000 test-USDC (6 decimals) —
 // holds an authentic on-chain-verifiable TxLINE proof. Anyone can settle it from the UI
 // and watch the atomic TxLINE-CPI payout on devnet. The France–Spain showcase vault is
 // left untouched. Created by scripts/setup-settlement-demo.ts.
-export const SETTLEMENT_DEMO_POLICY = "CpCdFcNkHHjQwW7J4AKyuRZNxusRMi8a6kSKjM2pqXGq";
+export const SETTLEMENT_DEMO_POLICY = "Axs7Tf6B2DbsDQ3EwLF4tvVrmhkb39hPR5FbrjUeUUon";

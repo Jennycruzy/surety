@@ -10,8 +10,8 @@ use anchor_spl::token_interface::{
 };
 use solana_sha256_hasher::hash;
 
-mod txline;
-use txline::{
+use txline_cpi as txline;
+use txline_cpi::{
     BinaryExpression, Comparison, FixtureValidationInput, NDimensionalStrategy,
     OddsValidationInput, StatPredicate, StatValidationInput, TraderPredicate,
 };
@@ -22,6 +22,7 @@ const VAULT_VERSION: u8 = 1;
 const POLICY_VERSION: u8 = 1;
 const MAX_PREDICATE_BYTES: usize = 32;
 const BPS_DENOMINATOR: u128 = 10_000;
+const MAX_BROKER_COMMISSION_BPS: u16 = 1_000;
 const MAX_TXLINE_PROOF_NODES: usize = 32;
 const MAX_SETTLEMENT_STATS: usize = 4;
 const MAX_ODDS_AGE_MS: i64 = 15 * 60 * 1_000;
@@ -41,6 +42,7 @@ pub mod surety_core {
         epoch_seconds: i64,
         margin_bps: u16,
         formula_version: u16,
+        broker_commission_bps: u16,
     ) -> Result<()> {
         require!(
             max_bucket_bps > 0 && max_bucket_bps <= 10_000,
@@ -49,6 +51,10 @@ pub mod surety_core {
         require!(epoch_seconds > 0, SuretyError::InvalidEpoch);
         require!(margin_bps >= 10_000, SuretyError::InvalidMargin);
         require!(matches!(formula_version, 1 | 2), SuretyError::InvalidFormulaVersion);
+        require!(
+            broker_commission_bps <= MAX_BROKER_COMMISSION_BPS,
+            SuretyError::InvalidBrokerCommission
+        );
 
         let vault = &mut ctx.accounts.vault;
         vault.version = VAULT_VERSION;
@@ -69,6 +75,7 @@ pub mod surety_core {
         vault.latest_attestation_hash = [0; 32];
         vault.margin_bps = margin_bps;
         vault.formula_version = formula_version;
+        vault.broker_commission_bps = broker_commission_bps;
 
         assert_reserve_exact(vault, ctx.accounts.reserve.amount)?;
         emit!(VaultInitialized {
@@ -255,6 +262,7 @@ pub mod surety_core {
             &ctx.accounts.asset_mint,
             &mut ctx.accounts.reserve,
             &ctx.accounts.holder_asset_account,
+            ctx.accounts.broker_asset_account.as_deref(),
             &mut ctx.accounts.bucket,
             &mut ctx.accounts.policy,
             &ctx.accounts.policy_escrow,
@@ -365,6 +373,7 @@ pub mod surety_core {
             &ctx.accounts.asset_mint,
             &mut ctx.accounts.reserve,
             &ctx.accounts.holder_asset_account,
+            ctx.accounts.broker_asset_account.as_deref(),
             &mut ctx.accounts.bucket,
             &mut ctx.accounts.policy,
             &ctx.accounts.policy_escrow,
@@ -773,6 +782,12 @@ pub struct IssuePolicy<'info> {
     #[account(mut, token::mint = asset_mint, token::authority = holder)]
     pub holder_asset_account: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(
+        mut,
+        token::mint = asset_mint,
+        constraint = broker_asset_account.owner != holder.key() @ SuretyError::SelfReferral
+    )]
+    pub broker_asset_account: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
+    #[account(
         init_if_needed,
         payer = holder,
         space = 8 + ExposureBucket::INIT_SPACE,
@@ -862,6 +877,12 @@ pub struct IssuePolicyWithValidatedOdds<'info> {
     pub reserve: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(mut, token::mint = asset_mint, token::authority = holder)]
     pub holder_asset_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        mut,
+        token::mint = asset_mint,
+        constraint = broker_asset_account.owner != holder.key() @ SuretyError::SelfReferral
+    )]
+    pub broker_asset_account: Option<Box<InterfaceAccount<'info, TokenAccount>>>,
     #[account(
         init_if_needed,
         payer = holder,
@@ -991,6 +1012,7 @@ pub struct Vault {
     pub latest_attestation_hash: [u8; 32],
     pub margin_bps: u16,
     pub formula_version: u16,
+    pub broker_commission_bps: u16,
 }
 
 #[account]
@@ -1200,6 +1222,14 @@ pub struct PolicyIssuedWithValidatedOdds {
 }
 
 #[event]
+pub struct BrokerCommissionPaid {
+    pub policy: Pubkey,
+    pub broker: Pubkey,
+    pub commission: u64,
+    pub premium: u64,
+}
+
+#[event]
 pub struct AttestationPosted {
     pub vault: Pubkey,
     pub attestation: Pubkey,
@@ -1315,6 +1345,10 @@ pub enum SuretyError {
     FixtureIdMismatch,
     #[msg("bucket hash does not match the policy fixture and outcome")]
     BucketHashMismatch,
+    #[msg("broker commission cannot exceed 1,000 basis points")]
+    InvalidBrokerCommission,
+    #[msg("the policy holder cannot receive their own broker commission")]
+    SelfReferral,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1324,6 +1358,7 @@ fn issue_policy_core<'info>(
     asset_mint: &InterfaceAccount<'info, Mint>,
     reserve: &mut InterfaceAccount<'info, TokenAccount>,
     holder_asset_account: &InterfaceAccount<'info, TokenAccount>,
+    broker_asset_account: Option<&InterfaceAccount<'info, TokenAccount>>,
     bucket: &mut Account<'info, ExposureBucket>,
     policy: &mut Account<'info, Policy>,
     policy_escrow: &InterfaceAccount<'info, TokenAccount>,
@@ -1349,11 +1384,16 @@ fn issue_policy_core<'info>(
     );
 
     reconcile_reserve(vault, reserve.amount)?;
+    let (net_premium, commission) = premium_split(
+        args.premium,
+        vault.broker_commission_bps,
+        broker_asset_account.is_some(),
+    )?;
     require!(vault.total_capital > 0, SuretyError::EmptyVault);
     require!(
         vault
             .free_reserves
-            .checked_add(args.premium)
+            .checked_add(net_premium)
             .ok_or(SuretyError::MathOverflow)?
             >= args.coverage,
         SuretyError::InsufficientFreeReserves
@@ -1376,9 +1416,29 @@ fn issue_policy_core<'info>(
         holder_asset_account,
         reserve,
         &holder.to_account_info(),
-        args.premium,
+        net_premium,
         None,
     )?;
+
+    if let Some(broker_account) = broker_asset_account {
+        if commission > 0 {
+            transfer_tokens(
+                token_program,
+                asset_mint,
+                holder_asset_account,
+                broker_account,
+                &holder.to_account_info(),
+                commission,
+                None,
+            )?;
+        }
+        emit!(BrokerCommissionPaid {
+            policy: policy.key(),
+            broker: broker_account.owner,
+            commission,
+            premium: args.premium,
+        });
+    }
 
     let vault_id = vault.vault_id;
     let vault_bump = [vault.bump];
@@ -1413,8 +1473,10 @@ fn issue_policy_core<'info>(
     policy.expires_at = args.expires_at;
     policy.created_at = Clock::get()?.unix_timestamp;
 
-    vault.total_capital = checked_add(vault.total_capital, args.premium)?;
-    vault.free_reserves = checked_add(vault.free_reserves, args.premium)?;
+    // Commission is distribution expense paid out of premium; only the carrier's
+    // net premium becomes vault capital and may support policy liabilities.
+    vault.total_capital = checked_add(vault.total_capital, net_premium)?;
+    vault.free_reserves = checked_add(vault.free_reserves, net_premium)?;
     vault.free_reserves = checked_sub(vault.free_reserves, args.coverage)?;
     vault.locked_liabilities = checked_add(vault.locked_liabilities, args.coverage)?;
     vault.policy_count = checked_add(vault.policy_count, 1)?;
@@ -1433,6 +1495,17 @@ fn issue_policy_core<'info>(
         bucket_hash: policy.bucket_hash,
     });
     Ok(())
+}
+
+fn premium_split(premium: u64, commission_bps: u16, has_broker: bool) -> Result<(u64, u64)> {
+    if !has_broker {
+        return Ok((premium, 0));
+    }
+    let commission = u64::try_from(
+        (u128::from(premium) * u128::from(commission_bps)) / BPS_DENOMINATOR,
+    )
+    .map_err(|_| error!(SuretyError::MathOverflow))?;
+    Ok((checked_sub(premium, commission)?, commission))
 }
 
 fn pure_fixture_id(packed_fixture_id: i64) -> Result<u64> {
@@ -2045,6 +2118,45 @@ fn strategy_for_policy(
     predicate_bytes: &[u8],
     payload: &StatValidationInput,
 ) -> Result<NDimensionalStrategy> {
+    if predicate_bytes.first() == Some(&2) {
+        require!(
+            predicate_bytes.len() == 18 && predicate_bytes[1] == 1 && predicate_bytes[2] == 3,
+            SuretyError::SettlementPredicateMismatch
+        );
+        let fixture_id = u64::try_from(payload.fixture_summary.fixture_id)
+            .map_err(|_| error!(SuretyError::SettlementPredicateMismatch))?;
+        let clause_fixture = u64::from_le_bytes(
+            predicate_bytes[3..11]
+                .try_into()
+                .map_err(|_| error!(SuretyError::SettlementPredicateMismatch))?,
+        );
+        require!(clause_fixture == fixture_id, SuretyError::SettlementPredicateMismatch);
+        let key = u32::from(u16::from_le_bytes(
+            predicate_bytes[11..13]
+                .try_into()
+                .map_err(|_| error!(SuretyError::SettlementPredicateMismatch))?,
+        ));
+        require!(matches!(key, 2001 | 2002), SuretyError::SettlementPredicateMismatch);
+        let leaf = payload.stats.first().ok_or_else(|| error!(SuretyError::SettlementPredicateMismatch))?;
+        require!(payload.stats.len() == 1 && leaf.stat.key == key, SuretyError::SettlementPredicateMismatch);
+        // TxLINE marks the halftime-finalized/rest record as period 3. Requiring that
+        // phase prevents an in-running first-half proof for the same prefixed key from
+        // settling a policy before the halftime whistle.
+        require!(leaf.stat.period == 3, SuretyError::SettlementNotFinal);
+        let threshold = i32::from_le_bytes(
+            predicate_bytes[14..18]
+                .try_into()
+                .map_err(|_| error!(SuretyError::SettlementPredicateMismatch))?,
+        );
+        return Ok(NDimensionalStrategy {
+            geometric_targets: Vec::new(),
+            distance_predicate: None,
+            discrete_predicates: vec![StatPredicate::Single {
+                index: 0,
+                predicate: integer_predicate(predicate_bytes[13], threshold)?,
+            }],
+        });
+    }
     require!(
         predicate_bytes.len() >= 17 && predicate_bytes[0] == 1,
         SuretyError::SettlementPredicateMismatch
@@ -2201,6 +2313,19 @@ mod tests {
     }
 
     #[test]
+    fn broker_commission_is_paid_from_premium_and_rounds_down() {
+        assert_eq!(premium_split(10_000_000, 500, true).unwrap(), (9_500_000, 500_000));
+        assert_eq!(premium_split(19, 500, true).unwrap(), (19, 0));
+    }
+
+    #[test]
+    fn issuance_without_a_broker_keeps_gross_premium_accounting() {
+        // The no-broker path is deliberately byte-for-byte equivalent economically:
+        // the full premium is carrier capital and no commission transfer is emitted.
+        assert_eq!(premium_split(10_000_000, 500, false).unwrap(), (10_000_000, 0));
+    }
+
+    #[test]
     fn withdrawal_unlocks_at_next_boundary() {
         assert_eq!(next_epoch(96, 48).unwrap(), 144);
         assert_eq!(next_epoch(97, 48).unwrap(), 144);
@@ -2231,6 +2356,20 @@ mod tests {
         let mut in_running = final_payload(&[1, 2]);
         in_running.stats[0].stat.period = 1;
         assert!(strategy_for_policy(&canonical, &in_running).is_err());
+    }
+
+    #[test]
+    fn halftime_policy_requires_the_finalized_halftime_phase() {
+        let mut canonical = vec![2, 1, 3];
+        canonical.extend_from_slice(&18_218_149u64.to_le_bytes());
+        canonical.extend_from_slice(&2001u16.to_le_bytes());
+        canonical.push(1); // greater-than
+        canonical.extend_from_slice(&0i32.to_le_bytes());
+        let mut payload = final_payload(&[2001]);
+        payload.stats[0].stat.period = 3;
+        assert!(strategy_for_policy(&canonical, &payload).is_ok());
+        payload.stats[0].stat.period = 2;
+        assert!(strategy_for_policy(&canonical, &payload).is_err());
     }
 
     #[test]

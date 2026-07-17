@@ -15,7 +15,7 @@ import {
   type RawOddsValidation,
   suretyFixtureValidationInput,
   suretyOddsValidationInput,
-} from "./txline.js";
+} from "@surety/txline-verify";
 
 export function validatedFixtureAddress(proof: RawFixtureValidation): PublicKey {
   return validatedFixturePda(pureFixtureId(proof.snapshot.FixtureId));

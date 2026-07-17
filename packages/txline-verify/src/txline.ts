@@ -2,7 +2,21 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { AnchorProvider, BN, Program, type Idl } from "@anchor-lang/core";
 import { ComputeBudgetProgram, PublicKey } from "@solana/web3.js";
-import type { TxlineWinnerPacket } from "../../quote-engine/src/engine.js";
+export type TxlineOddsPacket = {
+  FixtureId: number;
+  MessageId: string;
+  Ts: number;
+  Bookmaker: string;
+  BookmakerId: number;
+  SuperOddsType: string;
+  GameState: string | null;
+  InRunning: boolean;
+  MarketParameters: string | null;
+  MarketPeriod: string | null;
+  PriceNames: string[];
+  Prices: number[];
+  Pct?: string[];
+};
 
 // Pinned from txodds/tx-on-chain commit
 // eba4cb4d578bdb5cfad3c22dfd134f012496e445, devnet IDL v1.5.6.
@@ -10,12 +24,13 @@ export const TXLINE_DEVNET_PROGRAM_ID = new PublicKey(
   "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
 );
 export const DAILY_ODDS_ROOT_SEED = "daily_batch_roots";
+export const DAILY_SCORES_ROOT_SEED = "daily_scores_roots";
 export const TEN_DAILY_FIXTURES_ROOT_SEED = "ten_daily_fixtures_roots";
 export const FIXTURE_ID_MASK = (1n << 48n) - 1n;
 
 export type RawProofNode = { hash: number[]; isRightSibling: boolean };
 export type RawOddsValidation = {
-  odds: Omit<TxlineWinnerPacket, "Pct">;
+  odds: Omit<TxlineOddsPacket, "Pct">;
   summary: {
     fixtureId: number;
     updateStats: { updateCount: number; minTimestamp: number; maxTimestamp: number };
@@ -46,6 +61,16 @@ export type RawFixtureValidation = {
     updateStats: { updateCount: number; minTimestamp: number; maxTimestamp: number };
     updateSubTreeRoot: number[];
   };
+  subTreeProof: RawProofNode[];
+  mainTreeProof: RawProofNode[];
+};
+
+export type RawStatValidationV2 = {
+  ts: number;
+  statsToProve: Array<{ key: number; value: number; period: number }>;
+  eventStatRoot: number[];
+  summary: { fixtureId: number; updateStats: { updateCount: number; minTimestamp: number; maxTimestamp: number }; eventStatsSubTreeRoot: number[] };
+  statProofs: RawProofNode[][];
   subTreeProof: RawProofNode[];
   mainTreeProof: RawProofNode[];
 };
@@ -85,6 +110,16 @@ const txlineValidationIdl = {
     description: "Pinned TxLINE devnet validate_odds interface",
   },
   instructions: [
+    {
+      name: "validate_stat_v2",
+      discriminator: [208, 215, 194, 214, 241, 71, 246, 178],
+      accounts: [{ name: "daily_scores_merkle_roots" }],
+      args: [
+        { name: "payload", type: { defined: { name: "StatValidationInput" } } },
+        { name: "strategy", type: { defined: { name: "NDimensionalStrategy" } } },
+      ],
+      returns: "bool",
+    },
     {
       name: "validate_fixture",
       discriminator: [231, 129, 218, 86, 223, 114, 21, 126],
@@ -207,6 +242,46 @@ const txlineValidationIdl = {
         ],
       },
     },
+    { name: "ScoreStat", type: { kind: "struct", fields: [
+      { name: "key", type: "u32" }, { name: "value", type: "i32" }, { name: "period", type: "i32" },
+    ] } },
+    { name: "ScoresUpdateStats", type: { kind: "struct", fields: [
+      { name: "update_count", type: "i32" }, { name: "min_timestamp", type: "i64" }, { name: "max_timestamp", type: "i64" },
+    ] } },
+    { name: "ScoresBatchSummary", type: { kind: "struct", fields: [
+      { name: "fixture_id", type: "i64" },
+      { name: "update_stats", type: { defined: { name: "ScoresUpdateStats" } } },
+      { name: "events_sub_tree_root", type: { array: ["u8", 32] } },
+    ] } },
+    { name: "StatLeaf", type: { kind: "struct", fields: [
+      { name: "stat", type: { defined: { name: "ScoreStat" } } },
+      { name: "stat_proof", type: { vec: { defined: { name: "ProofNode" } } } },
+    ] } },
+    { name: "StatValidationInput", type: { kind: "struct", fields: [
+      { name: "ts", type: "i64" },
+      { name: "fixture_summary", type: { defined: { name: "ScoresBatchSummary" } } },
+      { name: "fixture_proof", type: { vec: { defined: { name: "ProofNode" } } } },
+      { name: "main_tree_proof", type: { vec: { defined: { name: "ProofNode" } } } },
+      { name: "event_stat_root", type: { array: ["u8", 32] } },
+      { name: "stats", type: { vec: { defined: { name: "StatLeaf" } } } },
+    ] } },
+    { name: "BinaryExpression", type: { kind: "enum", variants: [{ name: "Add" }, { name: "Subtract" }] } },
+    { name: "Comparison", type: { kind: "enum", variants: [{ name: "GreaterThan" }, { name: "LessThan" }, { name: "EqualTo" }] } },
+    { name: "TraderPredicate", type: { kind: "struct", fields: [
+      { name: "threshold", type: "i32" }, { name: "comparison", type: { defined: { name: "Comparison" } } },
+    ] } },
+    { name: "GeometricTarget", type: { kind: "struct", fields: [
+      { name: "stat_index", type: "u8" }, { name: "prediction", type: "i32" },
+    ] } },
+    { name: "StatPredicate", type: { kind: "enum", variants: [
+      { name: "Single", fields: [{ name: "index", type: "u8" }, { name: "predicate", type: { defined: { name: "TraderPredicate" } } }] },
+      { name: "Binary", fields: [{ name: "index_a", type: "u8" }, { name: "index_b", type: "u8" }, { name: "op", type: { defined: { name: "BinaryExpression" } } }, { name: "predicate", type: { defined: { name: "TraderPredicate" } } }] },
+    ] } },
+    { name: "NDimensionalStrategy", type: { kind: "struct", fields: [
+      { name: "geometric_targets", type: { vec: { defined: { name: "GeometricTarget" } } } },
+      { name: "distance_predicate", type: { option: { defined: { name: "TraderPredicate" } } } },
+      { name: "discrete_predicates", type: { vec: { defined: { name: "StatPredicate" } } } },
+    ] } },
   ],
 } as unknown as Idl;
 
@@ -234,7 +309,7 @@ export function assertAuthenticProofShape(proof: RawOddsValidation): void {
   }
 }
 
-export function assertProofMatchesPacket(proof: RawOddsValidation, packet: TxlineWinnerPacket): void {
+export function assertProofMatchesPacket(proof: RawOddsValidation, packet: TxlineOddsPacket): void {
   const { Pct: _pct, ...committedPacket } = packet;
   assert.deepEqual(proof.odds, committedPacket, "TxLINE proof returned a different odds packet");
 }
@@ -249,6 +324,40 @@ export function dailyOddsRootPda(timestampMs: number): PublicKey {
     [Buffer.from(DAILY_ODDS_ROOT_SEED), day],
     TXLINE_DEVNET_PROGRAM_ID,
   )[0];
+}
+
+export function dailyScoresRootPda(timestampMs: number): PublicKey {
+  assert(Number.isSafeInteger(timestampMs) && timestampMs >= 0, "invalid proof timestamp");
+  const epochDay = Math.floor(timestampMs / 86_400_000);
+  assert(epochDay <= 0xffff, "proof timestamp exceeds TxLINE's u16 epoch-day range");
+  const day = Buffer.alloc(2);
+  day.writeUInt16LE(epochDay);
+  return PublicKey.findProgramAddressSync([Buffer.from(DAILY_SCORES_ROOT_SEED), day], TXLINE_DEVNET_PROGRAM_ID)[0];
+}
+
+export async function validateStatV2OnDevnet(provider: AnchorProvider, proof: RawStatValidationV2): Promise<boolean> {
+  assert(proof.statsToProve.length > 0 && proof.statsToProve.length === proof.statProofs.length, "stat proof cardinality mismatch");
+  const mapProof = (nodes: RawProofNode[]) => nodes.map((node) => ({ hash: [...node.hash], isRightSibling: node.isRightSibling }));
+  // TxLINE validates the batch seed timestamp, which is the summary's minimum
+  // timestamp. The API's top-level `ts` may instead be the latest update in a
+  // multi-update batch (notably at halftime).
+  const validationTimestamp = proof.summary.updateStats.minTimestamp;
+  const payload = {
+    ts: new BN(validationTimestamp),
+    fixtureSummary: { fixtureId: new BN(proof.summary.fixtureId), updateStats: { updateCount: proof.summary.updateStats.updateCount, minTimestamp: new BN(proof.summary.updateStats.minTimestamp), maxTimestamp: new BN(proof.summary.updateStats.maxTimestamp) }, eventsSubTreeRoot: proof.summary.eventStatsSubTreeRoot },
+    fixtureProof: mapProof(proof.subTreeProof),
+    mainTreeProof: mapProof(proof.mainTreeProof),
+    eventStatRoot: proof.eventStatRoot,
+    stats: proof.statsToProve.map((stat, index) => ({ stat, statProof: mapProof(proof.statProofs[index]!) })),
+  };
+  const strategy = { geometricTargets: [], distancePredicate: null, discretePredicates: proof.statsToProve.map((stat, index) => ({ single: { index, predicate: { threshold: stat.value, comparison: { equalTo: {} } } } })) };
+  const roots = dailyScoresRootPda(validationTimestamp);
+  const account = await provider.connection.getAccountInfo(roots, "confirmed");
+  assert(account?.owner.equals(TXLINE_DEVNET_PROGRAM_ID), `TxLINE daily score root ${roots} is absent or wrongly owned`);
+  const program = new Program(txlineValidationIdl, provider);
+  const method = program.methods.validateStatV2;
+  assert(method, "pinned TxLINE IDL did not expose validateStatV2");
+  return method(payload, strategy).accountsStrict({ dailyScoresMerkleRoots: roots }).preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 })]).view() as Promise<boolean>;
 }
 
 export function tenDailyFixturesRootPda(timestampMs: number): PublicKey {

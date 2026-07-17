@@ -74,7 +74,7 @@ async function main() {
     console.log("STEP: initializing formula-v2 vault", vault.toBase58());
     initializeTransaction = await submit(
       await program.methods
-        .initializeVault([...vaultId], 2_000, new BN(172_800), 15_000, 2)
+        .initializeVault([...vaultId], 2_000, new BN(172_800), 15_000, 2, 500)
         .accountsStrict({
           authority: payer.publicKey,
           vault,
@@ -240,6 +240,7 @@ async function main() {
           assetMint: ASSET_MINT,
           reserve,
           holderAssetAccount: holderAssets.address,
+          brokerAssetAccount: null,
           bucket,
           policy,
           policyEscrow,

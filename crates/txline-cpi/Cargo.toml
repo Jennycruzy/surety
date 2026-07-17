@@ -1,0 +1,13 @@
+[package]
+name = "txline-cpi"
+version = "0.1.0"
+description = "Pinned Anchor types and CPI helpers for TxLINE on-chain validation"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Jennycruzy/surety"
+keywords = ["txline", "txodds", "solana", "anchor", "oracle"]
+categories = ["cryptography::cryptocurrencies"]
+readme = "README.md"
+
+[dependencies]
+anchor-lang = "=1.0.2"

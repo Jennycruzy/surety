@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use anchor_lang::prelude::*;
 
 // Pinned from txodds/tx-on-chain commit

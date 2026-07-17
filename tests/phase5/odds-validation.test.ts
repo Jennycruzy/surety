@@ -14,7 +14,7 @@ import {
   tenDailyFixturesRootPda,
   type RawFixtureValidation,
   type RawOddsValidation,
-} from "../../services/odds-validation/src/txline.js";
+} from "@surety/txline-verify";
 import {
   buildRecordValidatedFixtureTx,
   buildRecordValidatedOddsTx,

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import matrix from "../../../docs/provability-matrix.json" with { type: "json" };
 
 export const CANONICAL_VERSION = 1;
 
@@ -28,7 +29,8 @@ const ID_OUTCOMES = new Map<number, Outcome>(Object.entries(OUTCOME_IDS).map(([n
 
 export type StatClause = { kind: "stat"; fixtureId: bigint; stat: StatName; operator: Operator; value: number };
 export type OutcomeClause = { kind: "outcome"; fixtureId: bigint; operator: "=="; value: Outcome };
-export type Clause = StatClause | OutcomeClause;
+export type PeriodStatClause = { kind: "period_stat"; fixtureId: bigint; period: "HT"; stat: "goals_home" | "goals_away"; statKey: number; operator: Operator; value: number };
+export type Clause = StatClause | OutcomeClause | PeriodStatClause;
 export type CompiledPredicate = {
   clauses: Clause[];
   canonicalBytes: Uint8Array;
@@ -76,6 +78,37 @@ function parseStatClause(text: string): StatClause | null {
   };
 }
 
+const provedPeriodKeys = new Set(
+  matrix.results
+    .filter((row) => row.status === "proof-returned")
+    .map((row) => `${row.prefix}:${row.baseKey}`),
+);
+export const PERIOD_PREDICATE_MENU = Object.freeze(
+  [
+    { period: "HT" as const, prefix: 2_000, baseKey: 1, stat: "goals_home" as const, market: "half=1 participant goals" },
+    { period: "HT" as const, prefix: 2_000, baseKey: 2, stat: "goals_away" as const, market: "half=1 participant goals" },
+  ].filter((item) => provedPeriodKeys.has(`${item.prefix}:${item.baseKey}`)),
+);
+
+function parsePeriodStatClause(text: string): PeriodStatClause | null {
+  const match = /^stat\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([a-zA-Z0-9_]+)\s*\)\s*(==|>=|<=|>|<)\s*(-?\d+)$/i.exec(text);
+  if (!match) return null;
+  const period = match[2]!.toUpperCase();
+  if (period !== "HT") throw new PredicateError(`period '${match[2]}' was not admitted by the committed provability matrix`);
+  const stat = match[3]!.toLowerCase();
+  const baseKey = stat === "goals_home" ? 1 : stat === "goals_away" ? 2 : STAT_IDS[stat as StatName];
+  if (!baseKey || !provedPeriodKeys.has(`2000:${baseKey}`)) {
+    throw new PredicateError(`stat(${period},${stat}) was not proved for both recorded fixtures in the committed provability matrix`);
+  }
+  if (!PERIOD_PREDICATE_MENU.some((item) => item.baseKey === baseKey)) {
+    throw new PredicateError(`stat(${period},${stat}) is proof-backed but unpriceable: the captured consensus feed has no deterministic period market for this field`);
+  }
+  const value = Number(match[5]);
+  if (!Number.isSafeInteger(value) || value < -2_147_483_648 || value > 2_147_483_647) throw new PredicateError(`stat value '${match[5]}' is outside the signed 32-bit proof value range`);
+  const pricedStat = baseKey === 1 ? "goals_home" : "goals_away";
+  return { kind: "period_stat", fixtureId: parseFixtureId(match[1]!.trim()), period: "HT", stat: pricedStat, statKey: 2_000 + baseKey, operator: match[4] as Operator, value };
+}
+
 function parseOutcomeClause(text: string): OutcomeClause | null {
   const match = /^outcome\s*\(\s*([^)]*)\s*\)\s*(==|>=|<=|>|<)\s*([a-zA-Z_]+)$/i.exec(text);
   if (!match) return null;
@@ -107,6 +140,15 @@ function rejectUnprovenField(text: string): never {
 }
 
 function clauseBytes(clause: Clause): Buffer {
+  if (clause.kind === "period_stat") {
+    const bytes = Buffer.alloc(16);
+    bytes.writeUInt8(3, 0);
+    bytes.writeBigUInt64LE(clause.fixtureId, 1);
+    bytes.writeUInt16LE(clause.statKey, 9);
+    bytes.writeUInt8(OP_IDS[clause.operator], 11);
+    bytes.writeInt32LE(clause.value, 12);
+    return bytes;
+  }
   const bytes = Buffer.alloc(15);
   bytes.writeUInt8(clause.kind === "stat" ? 1 : 2, 0);
   bytes.writeBigUInt64LE(clause.fixtureId, 1);
@@ -122,7 +164,9 @@ function clauseBytes(clause: Clause): Buffer {
 }
 
 function formatClause(clause: Clause): string {
-  return clause.kind === "stat"
+  return clause.kind === "period_stat"
+    ? `stat(${clause.fixtureId},${clause.period},${clause.stat}) ${clause.operator} ${clause.value}`
+    : clause.kind === "stat"
     ? `stat(${clause.fixtureId},${clause.stat}) ${clause.operator} ${clause.value}`
     : `outcome(${clause.fixtureId}) == ${clause.value}`;
 }
@@ -135,15 +179,18 @@ export function compilePredicate(text: string): CompiledPredicate {
   if (pieces.some((piece) => !piece.trim())) throw new PredicateError("AND requires a comparison on each side");
   const encoded = pieces.map((piece) => {
     const trimmed = piece.trim();
-    const clause = parseStatClause(trimmed) ?? parseOutcomeClause(trimmed) ?? rejectUnprovenField(trimmed);
+    const clause = parsePeriodStatClause(trimmed) ?? parseStatClause(trimmed) ?? parseOutcomeClause(trimmed) ?? rejectUnprovenField(trimmed);
     return { clause, bytes: clauseBytes(clause) };
   });
   encoded.sort((left, right) => Buffer.compare(left.bytes, right.bytes));
+  if (encoded.some(({ clause }) => clause.kind === "period_stat") && encoded.length !== 1) {
+    throw new PredicateError("period-scoped predicates currently support exactly one comparison");
+  }
   if (encoded.length === 2 && encoded[0]!.bytes.equals(encoded[1]!.bytes)) {
     throw new PredicateError("duplicate comparisons are not allowed");
   }
   const canonicalBytes = Buffer.concat([
-    Buffer.from([CANONICAL_VERSION, encoded.length]),
+    Buffer.from([encoded[0]!.clause.kind === "period_stat" ? 2 : CANONICAL_VERSION, encoded.length]),
     ...encoded.map(({ bytes }) => bytes),
   ]);
   const clauses = encoded.map(({ clause }) => clause);
@@ -159,6 +206,16 @@ export function decodePredicate(input: Uint8Array): CompiledPredicate {
   const bytes = Buffer.from(input);
   if (bytes.length < 2) throw new PredicateError("canonical predicate is truncated");
   const version = bytes.readUInt8(0);
+  if (version === 2) {
+    if (bytes.length !== 18 || bytes[1] !== 1 || bytes[2] !== 3) throw new PredicateError("canonical period predicate has an invalid shape");
+    const fixtureId = bytes.readBigUInt64LE(3);
+    const statKey = bytes.readUInt16LE(11);
+    const operator = ID_OPS.get(bytes.readUInt8(13));
+    const stat = statKey === 2001 ? "goals_home" : statKey === 2002 ? "goals_away" : undefined;
+    if (!operator || !stat) throw new PredicateError("canonical period predicate contains an unpriced field or operator");
+    const clauses: Clause[] = [{ kind: "period_stat", fixtureId, period: "HT", stat, statKey, operator, value: bytes.readInt32LE(14) }];
+    return { clauses, canonicalBytes: bytes, canonicalText: clauses.map(formatClause).join(" AND "), hash: createHash("sha256").update(bytes).digest("hex") };
+  }
   if (version !== CANONICAL_VERSION) throw new PredicateError(`unsupported canonical predicate version ${version}`);
   const count = bytes.readUInt8(1);
   if (count < 1 || count > 2 || bytes.length !== 2 + count * 15) {
