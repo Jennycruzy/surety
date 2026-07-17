@@ -167,11 +167,11 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   authentic key-2001 proof then passed `validate_stat_v2` and settled a halftime SURETY
   policy on devnet. The fix lives in the extracted `@surety-tx/txline-verify` package so future
   TxLINE developers do not have to rediscover it. The companion `txline-cpi` crate packages
-  the pinned CPI wire types. Registry targets:
-  [npm](https://www.npmjs.com/package/@surety-tx/txline-verify) and
-  [crates.io](https://crates.io/crates/txline-cpi); publication is pending maintainer
-  credentials, so this entry does not claim the registry artifacts are live yet.
-- **Status:** Integration fixed and regression-tested; public-package gate pending auth.
+  the pinned CPI wire types. Both are published and installable:
+  [npm](https://www.npmjs.com/package/@surety-tx/txline-verify) (`@surety-tx/txline-verify@0.1.0`)
+  and [crates.io](https://crates.io/crates/txline-cpi) (`txline-cpi@0.1.0`); `make verify-sdk`
+  installs them from the public registries and confirms they match the in-repo code.
+- **Status:** Integration fixed and regression-tested; packages published and registry-verified.
 
 ## 2026-07-17 — Period proof coverage exceeds the documented market map
 

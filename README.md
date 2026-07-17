@@ -29,9 +29,9 @@ premium, and the broker receives 5% in the same transaction.
 - [`txline-cpi` on crates.io](https://crates.io/crates/txline-cpi) — Anchor-compatible types and helpers for one-CPI settlement against `validate_stat_v2`.
 
 Both packages are extracted from the code SURETY runs. The repository consumes the same
-workspace packages, and `make verify-sdk` installs the public artifacts and compares them
-against a committed packet. Registry publication is pending maintainer credentials; the
-links and integrity gate must not be represented as live until that publish succeeds.
+workspace packages, and `make verify-sdk` installs the public artifacts (`@surety-tx/txline-verify@0.1.0`,
+`txline-cpi@0.1.0`) and compares them against a committed packet — proving the published
+code is the real thing.
 
 ---
 

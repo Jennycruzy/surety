@@ -95,9 +95,9 @@ These were all workable, and none were blockers to shipping the atomic-settlemen
 The friction we hit integrating the proof timestamp and CPI wire format is now packaged as
 [`@surety-tx/txline-verify`](https://www.npmjs.com/package/@surety-tx/txline-verify) and
 [`txline-cpi`](https://crates.io/crates/txline-cpi), so future TxLINE developers can skip it.
-The repository already consumes those extracted workspaces; registry publication and the
-public-install integrity gate remain pending maintainer npm/crates credentials and are not
-claimed complete.
+The repository already consumes those extracted workspaces, and both are published:
+`@surety-tx/txline-verify@0.1.0` on npm and `txline-cpi@0.1.0` on crates.io. `make verify-sdk`
+installs the public artifacts and confirms they match the in-repo code.
 
 The period probe also produced two concrete TxLINE extension requests: document a
 validator-backed goal-timestamp key/path, and expose penalties/shootout decision through an

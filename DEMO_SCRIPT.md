@@ -10,9 +10,9 @@ Devnet with a little SOL, Explorer links handy. For the France–Spain demo, set
 env so the outcome buttons read "France wins the match" / "Spain wins the match" — otherwise
 they show neutral "Home team" / "Away team" wording.
 
-Do not record the package-publication sentence in the close until both registry links
-resolve and `make verify-sdk` passes. The repository packages are ready, but registry
-publication currently requires maintainer npm/crates.io credentials.
+The package-publication sentence in the close is cleared to record: both registry links
+resolve (`@surety-tx/txline-verify` on npm, `txline-cpi` on crates.io) and `make verify-sdk`
+passes against the public registries.
 
 ---
 

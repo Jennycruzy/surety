@@ -386,14 +386,16 @@ the settlement CPI.
 - PASS — The TxLINE CPI wire types/helpers were moved into `crates/txline-cpi`; the Anchor
   program depends on exact version `0.1.0` through its workspace path. `cargo test
   --workspace --all-targets` and both examples pass.
-- PASS — `npm pack --dry-run` and `cargo publish --dry-run -p txline-cpi --allow-dirty`
-  validate the publish contents. `scripts/verify-published-txline.mjs` is wired into
-  `make verify-sdk` and will install exact public versions into a temporary directory,
-  compare verification of a committed packet to the workspace result, and check the crate.
-- BLOCKED (external credentials) — `npm whoami` returns `ENEEDAUTH`, and no crates.io token
-  is installed. Therefore neither registry URL nor the registry-install integrity check is
-  claimed PASS. Publish `0.1.0` with maintainer credentials, then run `make verify-sdk` to
-  close this gate; the repository explicitly refuses to substitute a local tarball.
+- PASS — Both packages are published and installable from their public registries:
+  `@surety-tx/txline-verify@0.1.0` (https://www.npmjs.com/package/@surety-tx/txline-verify)
+  and `txline-cpi@0.1.0` (https://crates.io/crates/txline-cpi).
+- PASS — `make verify-sdk` runs `scripts/verify-published-txline.mjs`, which installs the
+  exact public `@surety-tx/txline-verify@0.1.0` into a temporary directory, verifies a
+  committed packet with it, and asserts the result matches the workspace implementation,
+  then confirms `txline-cpi@0.1.0` is installable from crates.io. Output:
+  `PASS: public @surety-tx/txline-verify@0.1.0 matched in-repo result 56e6ea26…c85a287`
+  and `PASS: public txline-cpi@0.1.0 is installable from crates.io`. This proves the
+  published artifacts are the real code, not a shell.
 
 ## GATE 10B — On-chain broker commission
 
