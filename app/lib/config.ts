@@ -1,6 +1,12 @@
 import { PublicKey } from "@solana/web3.js";
 
-export const RPC_ENDPOINT = "https://api.devnet.solana.com";
+// Defaults to the public devnet RPC, which can return 429s under load. Set
+// SURETY_RPC_ENDPOINT (or NEXT_PUBLIC_SURETY_RPC_ENDPOINT for client bundles) to a
+// dedicated devnet RPC to avoid rate limiting in a hosted deploy.
+export const RPC_ENDPOINT =
+  process.env.SURETY_RPC_ENDPOINT ??
+  process.env.NEXT_PUBLIC_SURETY_RPC_ENDPOINT ??
+  "https://api.devnet.solana.com";
 export const PROGRAM_ID = new PublicKey("3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW");
 export const TXLINE_PROGRAM_ID = new PublicKey("6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J");
 

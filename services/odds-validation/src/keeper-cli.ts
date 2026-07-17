@@ -27,9 +27,28 @@ async function main() {
   const once = process.argv.includes("--once");
   const intervalSeconds = Number(argument("--interval") ?? "60");
   if (!Number.isInteger(intervalSeconds) || intervalSeconds < 15) throw new Error("--interval must be at least 15 seconds");
+  // A single transient TxLINE/RPC failure should not kill a long-running worker. In --once
+  // mode we still surface the error so schedulers and CI see a nonzero exit.
+  const maxAttempts = once ? 1 : 5;
   do {
     const started = Date.now();
-    await tick(fixtureId);
+    let attempt = 0;
+    for (;;) {
+      try {
+        await tick(fixtureId);
+        break;
+      } catch (error) {
+        attempt += 1;
+        if (attempt >= maxAttempts) {
+          if (once) throw error;
+          console.error(`WARN: tick failed ${attempt}x, will retry next interval: ${error instanceof Error ? error.message : String(error)}`);
+          break;
+        }
+        const backoffMs = Math.min(30_000, 1_000 * 2 ** (attempt - 1));
+        console.error(`WARN: tick attempt ${attempt} failed, retrying in ${backoffMs}ms: ${error instanceof Error ? error.message : String(error)}`);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      }
+    }
     if (once) break;
     await new Promise((resolve) => setTimeout(resolve, Math.max(0, intervalSeconds * 1_000 - (Date.now() - started))));
   } while (true);
