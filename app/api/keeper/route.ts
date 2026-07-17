@@ -21,12 +21,24 @@ function authorized(request: Request): boolean {
   return token.length > 0 && token === secret;
 }
 
-async function tick() {
-  const result = await syncValidatedMarket(FIXTURE_ID);
+// Which fixture to pre-warm. Priority: ?fixture= query param, then SURETY_KEEPER_FIXTURE_ID,
+// then the app-wide FIXTURE_ID. This lets the keeper warm a live fixture without changing
+// which match the storefront displays.
+function resolveFixtureId(request: Request): bigint {
+  const raw =
+    new URL(request.url).searchParams.get("fixture") ??
+    process.env.SURETY_KEEPER_FIXTURE_ID ??
+    FIXTURE_ID.toString();
+  if (!/^\d+$/.test(raw)) throw new Error(`invalid fixture id: ${raw}`);
+  return BigInt(raw);
+}
+
+async function tick(fixtureId: bigint) {
+  const result = await syncValidatedMarket(fixtureId);
   return Response.json({
     ok: true,
     observedAt: new Date().toISOString(),
-    fixtureId: FIXTURE_ID.toString(),
+    fixtureId: fixtureId.toString(),
     messageId: result.packet.MessageId,
     oddsTimestampMs: result.packet.Ts,
     fixtureReceipt: result.fixtureAddress.toBase58(),
@@ -40,8 +52,17 @@ async function handle(request: Request) {
   if (!authorized(request)) {
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+  let fixtureId: bigint;
   try {
-    return await tick();
+    fixtureId = resolveFixtureId(request);
+  } catch (error) {
+    return Response.json(
+      { ok: false, error: error instanceof Error ? error.message : String(error) },
+      { status: 400 },
+    );
+  }
+  try {
+    return await tick(fixtureId);
   } catch (error) {
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : String(error) },
