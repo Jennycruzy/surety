@@ -25,6 +25,12 @@ export const ASSET_DECIMALS = 6;
 export const FIXTURE_ID = BigInt(process.env.NEXT_PUBLIC_SURETY_FIXTURE_ID ?? "18237038");
 export const FIXTURE_LABEL = process.env.NEXT_PUBLIC_SURETY_FIXTURE_LABEL ?? "France v Spain, semifinal";
 
+// Team names shown on the outcome buttons. Set these per fixture so the labels never
+// contradict the configured match; when unset they fall back to neutral "Home team" /
+// "Away team" wording that is correct for any fixture.
+export const HOME_TEAM = process.env.NEXT_PUBLIC_SURETY_HOME_TEAM ?? "Home team";
+export const AWAY_TEAM = process.env.NEXT_PUBLIC_SURETY_AWAY_TEAM ?? "Away team";
+
 export const FAUCET_AMOUNT = 2_000_000_000n; // 2,000 test-USDC (6 decimals) — one click covers a demo premium
 
 // A dedicated, genuinely-settleable demo policy on its own vault: an open

@@ -51,10 +51,47 @@ SURETY_REQUIRE_VALIDATED_ODDS=1
 ```
 
 Validated mode fetches the latest authenticated snapshot and synchronizes its SURETY
-receipt on demand. `npm run keeper:odds -- --fixture <id>` can run as a separate 60-second
-worker. Use a formula-version 2 vault; version 2 disables legacy issuance, requires both a
-fixture receipt and fresh odds receipt, and binds the exposure bucket on-chain. The existing
-version 1 demo vault remains backward compatible.
+receipt on demand. Use a formula-version 2 vault; version 2 disables legacy issuance,
+requires both a fixture receipt and fresh odds receipt, and binds the exposure bucket
+on-chain. The existing version 1 demo vault remains backward compatible.
+
+Outcome-button team names come from `NEXT_PUBLIC_SURETY_HOME_TEAM` and
+`NEXT_PUBLIC_SURETY_AWAY_TEAM`. Set them per fixture so the labels never contradict the
+configured match; when unset they fall back to neutral "Home team" / "Away team" wording.
+
+## Pre-warming receipts (optional keeper)
+
+Correctness never depends on a background process — the quote path already synchronizes
+receipts on demand. Pre-warming only reduces first-quote latency by keeping the fixture and
+odds receipts current. Two ways to run it:
+
+**A. Persistent loop** (a separate worker, not on Vercel):
+
+```bash
+npm run keeper:odds -- --fixture 18257865 --interval 60
+```
+
+Runs a tick every 60 seconds, retrying transient TxLINE/RPC failures with backoff. Host it
+on any always-on runtime (Fly.io, Railway, Render, or a supervised VPS) with the same
+secrets the app uses.
+
+**B. HTTP endpoint + external scheduler** (no worker to host). The app exposes an
+authenticated route that runs exactly one tick:
+
+```
+GET /api/keeper?fixture=<id>
+Authorization: Bearer <KEEPER_TRIGGER_SECRET>
+```
+
+Set `KEEPER_TRIGGER_SECRET` in the deploy env (any long random string). The endpoint fails
+closed — without a matching bearer token it returns 401. The fixture can also be fixed with
+`SURETY_KEEPER_FIXTURE_ID` instead of the query param. Point any scheduler (e.g.
+cron-job.org) at the URL with the `Authorization` header on a 1–5 minute interval. A
+successful tick returns `{"ok":true, ...}` with the fixture/odds receipt addresses.
+
+> Vercel serverless functions have an execution-time limit (10s on Hobby, 60s on Pro). A
+> normal tick is well under that, but under devnet congestion set `SURETY_RPC_ENDPOINT` to a
+> dedicated RPC to stay fast and avoid public-endpoint 429s.
 
 The exercised France–England devnet configuration is:
 

@@ -4,13 +4,13 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { requestQuote, type QuoteResult } from "../lib/quote-action.js";
 import { buildIssuePolicyTx, buildIssuePolicyWithValidatedOddsTx } from "../lib/surety-client.js";
-import { FIXTURE_ID, FIXTURE_LABEL } from "../lib/config.js";
+import { AWAY_TEAM, FIXTURE_ID, FIXTURE_LABEL, HOME_TEAM } from "../lib/config.js";
 
 type Outcome = "WIN_HOME" | "DRAW" | "WIN_AWAY";
 const OUTCOME_LABEL: Record<Outcome, { merchant: string; prop: string }> = {
-  WIN_HOME: { merchant: "France wins the match", prop: "Back France to win" },
+  WIN_HOME: { merchant: `${HOME_TEAM} wins the match`, prop: `Back ${HOME_TEAM} to win` },
   DRAW: { merchant: "Match ends in a draw", prop: "Back the draw" },
-  WIN_AWAY: { merchant: "Spain wins the match", prop: "Back Spain to win" },
+  WIN_AWAY: { merchant: `${AWAY_TEAM} wins the match`, prop: `Back ${AWAY_TEAM} to win` },
 };
 const EXPIRY_SECONDS = 30 * 24 * 60 * 60; // 30 days — well past the fixture's resolution
 
