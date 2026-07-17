@@ -7,7 +7,7 @@ import { Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js"
 import { buildChain, type MarkerInput } from "../../services/marker/src/marker.js";
 import { canonicalJson, normalizedProbabilitiesPpm, type TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";
 import type { QuoteAuditRecord } from "../../services/quote-engine/src/cli.js";
-import { SseFrameDecoder } from "@surety/txline-verify";
+import { SseFrameDecoder } from "@surety-tx/txline-verify";
 import type { SuretyCore } from "../../target/types/surety_core.js";
 
 const idl = JSON.parse(readFileSync("target/idl/surety_core.json", "utf8")) as SuretyCore;

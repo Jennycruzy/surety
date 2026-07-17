@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { loadDeployer } from "../../../app/lib/deployer.js";
 import { getProgram, newConnection } from "../../../app/lib/surety-client.js";
 import { buildRecordValidatedOddsTx, validatedOddsAddress } from "./record.js";
-import { oddsMessageHash, type RawOddsValidation } from "@surety/txline-verify";
+import { oddsMessageHash, type RawOddsValidation } from "@surety-tx/txline-verify";
 
 const proofPath =
   process.argv[2] ?? "data/recordings/phase0-18237038-message-000791-odds-proof.raw.json";

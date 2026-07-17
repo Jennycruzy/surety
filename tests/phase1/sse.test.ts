@@ -4,7 +4,7 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { PacketBus, SseFrameDecoder, replay } from "@surety/txline-verify";
+import { PacketBus, SseFrameDecoder, replay } from "@surety-tx/txline-verify";
 
 const fixture = Buffer.from(
   ": heartbeat\r\n\r\n" +

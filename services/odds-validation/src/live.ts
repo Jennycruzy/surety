@@ -10,7 +10,7 @@ import {
   pureFixtureId,
   type RawFixtureValidation,
   type RawOddsValidation,
-} from "@surety/txline-verify";
+} from "@surety-tx/txline-verify";
 
 export type TxlineSession = { apiOrigin: string; apiToken: string; jwt: string };
 

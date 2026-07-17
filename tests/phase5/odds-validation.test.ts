@@ -14,7 +14,7 @@ import {
   tenDailyFixturesRootPda,
   type RawFixtureValidation,
   type RawOddsValidation,
-} from "@surety/txline-verify";
+} from "@surety-tx/txline-verify";
 import {
   buildRecordValidatedFixtureTx,
   buildRecordValidatedOddsTx,

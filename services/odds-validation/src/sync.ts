@@ -16,7 +16,7 @@ import {
   buildRecordValidatedOddsTx,
   validatedOddsAddress,
 } from "./record.js";
-import { validateFixtureOnDevnet, validateOddsOnDevnet } from "@surety/txline-verify";
+import { validateFixtureOnDevnet, validateOddsOnDevnet } from "@surety-tx/txline-verify";
 
 export type SyncOptions = {
   connection?: Connection;

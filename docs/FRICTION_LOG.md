@@ -165,10 +165,10 @@ confirmed successfully. This did not resolve the public faucet issue itself.
   CPI payload used the timestamp committed by the stat summary.
 - **Resolution:** The converter now passes `summary.updateStats.minTimestamp`; the same
   authentic key-2001 proof then passed `validate_stat_v2` and settled a halftime SURETY
-  policy on devnet. The fix lives in the extracted `@surety/txline-verify` package so future
+  policy on devnet. The fix lives in the extracted `@surety-tx/txline-verify` package so future
   TxLINE developers do not have to rediscover it. The companion `txline-cpi` crate packages
   the pinned CPI wire types. Registry targets:
-  [npm](https://www.npmjs.com/package/@surety/txline-verify) and
+  [npm](https://www.npmjs.com/package/@surety-tx/txline-verify) and
   [crates.io](https://crates.io/crates/txline-cpi); publication is pending maintainer
   credentials, so this entry does not claim the registry artifacts are live yet.
 - **Status:** Integration fixed and regression-tested; public-package gate pending auth.

@@ -23,7 +23,7 @@ import {
   oddsMessageKey,
   type RawFixtureValidation,
   type RawOddsValidation,
-} from "@surety/txline-verify";
+} from "@surety-tx/txline-verify";
 import type { TxlineWinnerPacket } from "../../services/quote-engine/src/engine.js";
 import type { SuretyCore } from "../../target/types/surety_core.js";
 

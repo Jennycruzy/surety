@@ -381,7 +381,7 @@ the settlement CPI.
 ## GATE 10A — TxLINE SDK extraction
 
 - PASS — The verification/record/replay implementation was moved into the npm workspace
-  `packages/txline-verify`; all SURETY services import `@surety/txline-verify`, and no second
+  `packages/txline-verify`; all SURETY services import `@surety-tx/txline-verify`, and no second
   service copy remains. `npm test` builds that package before running the full suite.
 - PASS — The TxLINE CPI wire types/helpers were moved into `crates/txline-cpi`; the Anchor
   program depends on exact version `0.1.0` through its workspace path. `cargo test

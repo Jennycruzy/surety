@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { PublicKey } from "@solana/web3.js";
 import { compilePredicate } from "../../services/predicate/src/compiler.js";
 import { verifiedQuoteHash } from "../../services/odds-validation/src/quote-commitment.js";
-import { oddsMessageKey } from "@surety/txline-verify";
+import { oddsMessageKey } from "@surety-tx/txline-verify";
 import { validatedFixturePda, validatedOddsPda } from "../../app/lib/pda.js";
 import {
   auditQuote,

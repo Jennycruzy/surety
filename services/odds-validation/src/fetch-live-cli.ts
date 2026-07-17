@@ -7,7 +7,7 @@ import {
   fetchOddsProof,
   preserveAuthenticArtifact,
 } from "./live.js";
-import { validateFixtureOnDevnet, validateOddsOnDevnet } from "@surety/txline-verify";
+import { validateFixtureOnDevnet, validateOddsOnDevnet } from "@surety-tx/txline-verify";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);

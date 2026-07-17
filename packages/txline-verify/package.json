@@ -1,5 +1,5 @@
 {
-  "name": "@surety/txline-verify",
+  "name": "@surety-tx/txline-verify",
   "version": "0.1.0",
   "description": "Verify, record, and deterministically replay TxLINE data",
   "license": "MIT",

@@ -1,14 +1,14 @@
-# `@surety/txline-verify`
+# `@surety-tx/txline-verify`
 
 Verify your first TxLINE packet in five minutes.
 
 ```sh
-npm install @surety/txline-verify @anchor-lang/core @solana/web3.js
+npm install @surety-tx/txline-verify @anchor-lang/core @solana/web3.js
 ```
 
 ```ts
 import { readFile } from "node:fs/promises";
-import { assertAuthenticProofShape, type RawOddsValidation } from "@surety/txline-verify";
+import { assertAuthenticProofShape, type RawOddsValidation } from "@surety-tx/txline-verify";
 
 const proof = JSON.parse(
   await readFile("txline-odds-proof.json", "utf8"),

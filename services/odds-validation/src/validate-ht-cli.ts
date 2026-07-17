@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { AnchorProvider, setProvider } from "@anchor-lang/core";
-import { type RawStatValidationV2, validateStatV2OnDevnet } from "@surety/txline-verify";
+import { type RawStatValidationV2, validateStatV2OnDevnet } from "@surety-tx/txline-verify";
 
 const proofPath = process.argv[2] ?? "data/recordings/txline-18218149-seq522-ht-stat-2001-proof-v2.raw.json";
 const proof = JSON.parse(await readFile(proofPath, "utf8")) as RawStatValidationV2;

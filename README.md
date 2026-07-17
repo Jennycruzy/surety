@@ -25,7 +25,7 @@ premium, and the broker receives 5% in the same transaction.
 
 ### Build on TxLINE faster
 
-- [`@surety/txline-verify` on npm](https://www.npmjs.com/package/@surety/txline-verify) — connect, verify, record, and replay TxLINE packets.
+- [`@surety-tx/txline-verify` on npm](https://www.npmjs.com/package/@surety-tx/txline-verify) — connect, verify, record, and replay TxLINE packets.
 - [`txline-cpi` on crates.io](https://crates.io/crates/txline-cpi) — Anchor-compatible types and helpers for one-CPI settlement against `validate_stat_v2`.
 
 Both packages are extracted from the code SURETY runs. The repository consumes the same

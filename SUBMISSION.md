@@ -93,7 +93,7 @@ the free World Cup tier made real end-to-end testing possible.
 These were all workable, and none were blockers to shipping the atomic-settlement thesis.
 
 The friction we hit integrating the proof timestamp and CPI wire format is now packaged as
-[`@surety/txline-verify`](https://www.npmjs.com/package/@surety/txline-verify) and
+[`@surety-tx/txline-verify`](https://www.npmjs.com/package/@surety-tx/txline-verify) and
 [`txline-cpi`](https://crates.io/crates/txline-cpi), so future TxLINE developers can skip it.
 The repository already consumes those extracted workspaces; registry publication and the
 public-install integrity gate remain pending maintainer npm/crates credentials and are not

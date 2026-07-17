@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { PacketBus, replay, type FeedChannel } from "@surety/txline-verify";
+import { PacketBus, replay, type FeedChannel } from "@surety-tx/txline-verify";
 
 function argument(name: string): string | undefined {
   const index = process.argv.indexOf(name);

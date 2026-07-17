@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { AnchorProvider, setProvider } from "@anchor-lang/core";
-import { type RawOddsValidation, validateOddsOnDevnet } from "@surety/txline-verify";
+import { type RawOddsValidation, validateOddsOnDevnet } from "@surety-tx/txline-verify";
 
 const proofPath =
   process.argv[2] ?? "data/recordings/phase0-18237038-message-000791-odds-proof.raw.json";

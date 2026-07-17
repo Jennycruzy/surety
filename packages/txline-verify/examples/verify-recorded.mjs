@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { assertAuthenticProofShape, oddsMessageHash } from "@surety/txline-verify";
+import { assertAuthenticProofShape, oddsMessageHash } from "@surety-tx/txline-verify";
 
 const path = process.argv[2];
 assert(path, "usage: node verify-recorded.mjs <odds-proof.json>");

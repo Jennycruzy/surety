@@ -1,4 +1,4 @@
-import { PacketBus, recordStream, writeManifest } from "@surety/txline-verify";
+import { PacketBus, recordStream, writeManifest } from "@surety-tx/txline-verify";
 import { createGuestJwt, loadApiToken } from "./auth.js";
 
 function argument(name: string): string | undefined {
