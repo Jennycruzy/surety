@@ -2,8 +2,15 @@ import { PublicKey } from "@solana/web3.js";
 import { PROGRAM_ID, TXLINE_PROGRAM_ID, VAULT } from "./config.js";
 
 export function u64LE(value: bigint): Buffer {
+  if (value < 0n || value > 0xffff_ffff_ffff_ffffn) {
+    throw new RangeError("u64 value is out of range");
+  }
   const bytes = Buffer.alloc(8);
-  bytes.writeBigUInt64LE(value);
+  let remaining = value;
+  for (let index = 0; index < bytes.length; index += 1) {
+    bytes[index] = Number(remaining & 0xffn);
+    remaining >>= 8n;
+  }
   return bytes;
 }
 
