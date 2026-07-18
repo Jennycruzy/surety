@@ -48,16 +48,29 @@ export default function Dashboard({ records }: { records: DashboardRecord[] }) {
     <Nav active="dashboard" />
 
     <section className="hero">
-      <div><p className="eyebrow"><span className="live-dot" /> LIVE REPLAY · FRANCE v SPAIN</p><h1>Every liability.<br/><em>Visible.</em></h1><p className="lede">TxLINE consensus odds continuously re-mark ten fully collateralized policies. Every state is chained and written to Solana.</p></div>
+      <div>
+        <p className="eyebrow"><span className="live-dot" /> LIVE REPLAY · FRANCE v SPAIN</p>
+        <h1>Every liability.<br/><em>Visible.</em></h1>
+        <p className="lede">TxLINE consensus odds continuously re-mark ten fully collateralized policies. Every state is chained and written to Solana.</p>
+        <div className="demo-jumps" aria-label="Dashboard demo controls">
+          <span>DEMO CONTROLS</span>
+          <a href="#solvency-gauge">Solvency gauge ↓</a>
+          <a href="#attestation-chain">Explorer proofs ↓</a>
+        </div>
+      </div>
       <div className={`event-card ${goalLanded ? "landed" : ""}`}>
         <span>{goalLanded ? "GOAL CONFIRMED" : "MATCH IN PLAY"}</span><strong>{goalLanded ? "Spain scores" : "Awaiting event"}</strong><small>{goalLanded ? "TxLINE score packet · 57:35" : "Recorded TxLINE stream"}</small>
       </div>
     </section>
 
     <section className="grid">
-      <article className="panel ratio-panel">
+      <article className="panel ratio-panel" id="solvency-gauge">
         <div className="panel-head"><div><span className="label">SOLVENCY RATIO</span><h2>{ratio.toFixed(4)}×</h2></div><span className="healthy">● HEALTHY</span></div>
-        <div className="gauge"><div className="gauge-track"><div className="gauge-fill" style={{ width: `${ratioPct}%` }} /></div><div className="gauge-labels"><span>1.0× minimum</span><span>10.0×+</span></div></div>
+        <div className="gauge">
+          <strong className="gauge-title">Capital coverage gauge</strong>
+          <div className="gauge-track" role="meter" aria-label="Solvency ratio" aria-valuemin={1} aria-valuemax={10} aria-valuenow={ratio}><div className="gauge-fill" style={{ width: `${ratioPct}%` }} /></div>
+          <div className="gauge-labels"><span>1.0× minimum</span><span>10.0×+</span></div>
+        </div>
         <div className="metrics"><div><span>Total reserves</span><strong>{usdc(current.reserves)} <small>tUSDC</small></strong></div><div><span>Marked liability</span><strong>{usdc(current.markedLiabilities)} <small>tUSDC</small></strong></div><div><span>Locked collateral</span><strong>{usdc(current.lockedCollateral)} <small>tUSDC</small></strong></div></div>
       </article>
 
@@ -75,9 +88,10 @@ export default function Dashboard({ records }: { records: DashboardRecord[] }) {
         {Object.entries(current.bucketMarks).map(([bucket, mark]) => <div className="bucket" key={bucket}><div><span>{BUCKET_LABELS[bucket] ?? bucket}</span><strong>{usdc(mark.marked)} tUSDC</strong></div><div className="bucket-track"><span style={{width:`${Math.min(100, mark.utilizationBps / 100)}%`}} /></div></div>)}
       </article>
 
-      <article className="panel chain">
+      <article className="panel chain" id="attestation-chain">
         <div className="panel-head"><div><span className="label">ATTESTATION CHAIN</span><h3>Proof, not promises</h3></div><button onClick={() => setPlaying(!playing)}>{playing ? "Pause replay" : "Resume replay"}</button></div>
-        <div className="chain-list">{records.slice(0, position + 1).reverse().map((record, index) => <a key={record.seq} href={`https://explorer.solana.com/address/${record.attestationPda}?cluster=devnet`} target="_blank"><span className={index === 0 ? "chain-dot newest" : "chain-dot"}/><div><strong>Attestation #{record.seq}</strong><small>{short(record.hash)}</small></div><time>{new Date(Number(record.timestampMs)).toISOString().slice(11,19)} UTC</time></a>)}</div>
+        <p className="chain-help">Each attestation is a live devnet account. Open one to verify it on Solana Explorer.</p>
+        <div className="chain-list">{records.slice(0, position + 1).reverse().map((record, index) => <a key={record.seq} href={`https://explorer.solana.com/address/${record.attestationPda}?cluster=devnet`} target="_blank" rel="noreferrer"><span className={index === 0 ? "chain-dot newest" : "chain-dot"}/><div><strong>Attestation #{record.seq}</strong><small>{short(record.hash)}</small></div><span className="explorer-link">Explorer ↗</span><time>{new Date(Number(record.timestampMs)).toISOString().slice(11,19)} UTC</time></a>)}</div>
       </article>
     </section>
     <footer><span>Powered by <strong>TxLINE</strong> consensus odds</span><span>Vault {short("CDyQxhDHsaWYNBvjJgGPVFZdsBD3mC28VEX5DkCZkqEC")}</span><span>Program {short("3e5rBR2J9uHPHHn6tP8HF6mPbEJsJWtzQEyicv6v8qVW")}</span></footer>
