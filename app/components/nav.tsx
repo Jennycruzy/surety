@@ -36,7 +36,7 @@ export default function Nav({ active }: { active: "dashboard" | "coverage" | "pr
         <small>DEVNET</small>
       </div>
       <nav>
-        <a href="/" className={active === "dashboard" ? "active" : ""}>Glass balance sheet</a>
+        <a href="/dashboard" className={active === "dashboard" ? "active" : ""}>Glass balance sheet</a>
         <a href="/coverage" className={active === "coverage" ? "active" : ""}>Coverage</a>
         <a href="/props" className={active === "props" ? "active" : ""}>Props</a>
         <a href="/underwrite" className={active === "underwrite" ? "active" : ""}>Underwrite</a>
