@@ -19,7 +19,10 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
   const [outcome, setOutcome] = useState<Outcome>("WIN_HOME");
-  const [coverage, setCoverage] = useState(skin === "merchant" ? "500" : "25");
+  // Keep the demo default comfortably below the live vault's exposure cap. A 500 tUSDC
+  // request currently rejects correctly on-chain, but that makes the issuance step look
+  // absent during a first-time walkthrough.
+  const [coverage, setCoverage] = useState(skin === "merchant" ? "100" : "25");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -29,13 +32,12 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
 
   async function shareAsBroker() {
     if (!publicKey) return;
-    const action = new URL("/api/actions/coverage", window.location.origin);
-    action.searchParams.set("outcome", outcome);
-    action.searchParams.set("coverage", coverage);
-    action.searchParams.set("broker", publicKey.toBase58());
-    const dial = `https://dial.to/?action=${encodeURIComponent(`solana-action:${action}`)}`;
-    await navigator.clipboard.writeText(dial);
-    setShared(dial);
+    // Send recipients to SURETY directly. The previous dial.to wrapper is an external
+    // dependency and currently returns a Cloudflare 403, even though our Action is live.
+    const link = new URL("/coverage", window.location.origin);
+    link.searchParams.set("broker", publicKey.toBase58());
+    await navigator.clipboard.writeText(link.toString());
+    setShared(link.toString());
   }
 
   async function getQuote() {
@@ -140,13 +142,18 @@ export default function PolicyComposer({ skin }: { skin: "merchant" | "prop" }) 
           {publicKey ? "Share as broker link" : "Connect wallet to share as broker"}
         </button>
       </div>
-      {shared && <div className="notice success">Broker Action link copied. You earn 5% of premium bound through it, paid on-chain at issuance.</div>}
+      {shared && (
+        <div className="notice success">
+          Broker coverage link copied. You earn 5% of premium bound through it, paid on-chain at issuance. <a href={shared}>Open link</a>
+        </div>
+      )}
 
       {!quote && !issued && (
         <div className="actionrow">
           <button className="primary-btn" onClick={getQuote} disabled={quoting}>
             {quoting ? "Pricing from TxLINE odds…" : "Get TxLINE quote"}
           </button>
+          <span className="action-hint">Then connect your wallet to pay and issue the policy.</span>
         </div>
       )}
 

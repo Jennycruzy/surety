@@ -12,11 +12,19 @@ import { Keypair } from "@solana/web3.js";
 export function loadDeployer(): Keypair {
   const inline = process.env.SURETY_DEPLOYER_SECRET;
   if (inline) return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(inline) as number[]));
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("SURETY_DEPLOYER_SECRET is required in production");
-  }
+
+  // `next start` sets NODE_ENV=production even for a local demo build. The local key
+  // remains a valid fallback there; hosted bundles do not contain it because the read
+  // below is deliberately excluded from output tracing.
   const path = process.env.SURETY_DEPLOYER_SECRET_PATH ?? ".secrets/devnet-deployer.json";
-  // Local-only secret path: never trace or bundle this file into a production build.
-  const bytes = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8")) as number[];
-  return Keypair.fromSecretKey(Uint8Array.from(bytes));
+  try {
+    // Local-only secret path: never trace or bundle this file into a hosted build.
+    const bytes = JSON.parse(readFileSync(/* turbopackIgnore: true */ path, "utf8")) as number[];
+    return Keypair.fromSecretKey(Uint8Array.from(bytes));
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      throw new Error("SURETY_DEPLOYER_SECRET is required when the local demo key is unavailable");
+    }
+    throw error;
+  }
 }
