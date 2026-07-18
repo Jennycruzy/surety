@@ -5,7 +5,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useState } from "react";
 import { fundTestUsdc } from "../lib/faucet-action.js";
 
-export default function Nav({ active }: { active: "dashboard" | "coverage" | "props" | "underwrite" }) {
+export default function Nav({ active }: { active: "dashboard" | "coverage" | "props" | "underwrite" | "docs" }) {
   const { publicKey } = useWallet();
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -40,6 +40,7 @@ export default function Nav({ active }: { active: "dashboard" | "coverage" | "pr
         <a href="/coverage" className={active === "coverage" ? "active" : ""}>Coverage</a>
         <a href="/props" className={active === "props" ? "active" : ""}>Props</a>
         <a href="/underwrite" className={active === "underwrite" ? "active" : ""}>Underwrite</a>
+        <a href="/docs" className={active === "docs" ? "active" : ""}>Docs</a>
       </nav>
       <div className="navactions">
         {publicKey && (

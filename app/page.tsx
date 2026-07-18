@@ -41,6 +41,7 @@ export default function Landing() {
           <a href="https://www.npmjs.com/package/@surety-tx/txline-verify" target="_blank" rel="noreferrer">
             npm package
           </a>
+          <a href="/docs">Docs</a>
           <a href="/coverage">Coverage</a>
           <a className="lp-enter-sm" href="/dashboard">
             Enter app →
