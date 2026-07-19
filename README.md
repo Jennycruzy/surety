@@ -221,8 +221,7 @@ scheduler setup are in [`DEPLOY.md`](DEPLOY.md).
 ## Test token & devnet notes
 
 Pricing and settlement use a six-decimal, program-minted devnet **test USDC** for
-reproducibility. It is **not** Circle USDC and has **no monetary value**. TxLINE's credit
-token is never used by the SURETY program or user flows. All addresses and transactions
+reproducibility. TxLINE's credit token is never used by the SURETY program or user flows. All addresses and transactions
 referenced here are on Solana **devnet**.
 
 ## Further reading
