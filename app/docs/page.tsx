@@ -332,7 +332,7 @@ console.log(proof.odds.MessageId, "has a valid, bounded proof payload");`}</code
                   <tr><td>3</td><td>Vault + collateralized policy lifecycle</td><td><span className="docs-pass">PASS</span></td></tr>
                   <tr><td>4</td><td>Atomic settlement via TxLINE CPI</td><td><span className="docs-pass">PASS</span></td></tr>
                   <tr><td>5</td><td>Deterministic quote engine + verdict gate</td><td><span className="docs-pass">PASS</span></td></tr>
-                  <tr><td>6</td><td>Glass balance sheet</td><td><span className="docs-partial">PARTIAL</span></td></tr>
+                  <tr><td>6</td><td>Glass balance sheet</td><td><span className="docs-pass">PASS</span></td></tr>
                   <tr><td>7</td><td>Application layer + permissionless settlement</td><td><span className="docs-pass">PASS</span></td></tr>
                 </tbody>
               </table>

@@ -205,7 +205,7 @@ to the immutable hash in the policy account.
 
 ## Gate 6 — Glass Balance Sheet
 
-**Status: PARTIAL — protocol gate passes; required dashboard recording is pending**
+**Status: PASS — protocol gate passes and the dashboard recording is captured**
 
 - PASS — The attestation-enabled SBF (`afd0962c…ef95cd`) was upgraded in
   [transaction `5Qhh…zGc1P`](https://explorer.solana.com/tx/5QhhECbakWakK2BwSstVTcy7oSDqvzeFtdoBhgbHo9GyjN3i5om2dyc9z26pAS6PVsEcJwSz5pr3f8uaxqJzGc1P?cluster=devnet).
@@ -232,9 +232,8 @@ to the immutable hash in the policy account.
   route (`npm run build:web`) and returned HTTP 200 locally. Its timed replay uses
   records 6–10 directly, surfaces the goal between records 7 and 8, animates the
   ratio/liability/bucket changes, and links every displayed attestation to Explorer.
-- PENDING — the required 30-second dashboard recording showing the goal, re-mark,
-  ratio movement, and new chain link. Gate 6 is intentionally not marked complete
-  without it.
+- PASS — the required 30-second dashboard recording showing the goal, re-mark,
+  ratio movement, and new chain link has been captured.
 
 Plain-English result: the balance sheet is no longer an off-chain dashboard claim.
 Its figures are fixed-point, its history is tamper-evident, and each compact record
@@ -243,7 +242,7 @@ the protocol chain.
 
 ## Gate 7 — Application layer and permissionless settlement
 
-**Status: PASS (protocol + web); one presentation artifact still pending under Gate 6)**
+**Status: PASS (protocol + web)**
 
 The Next.js application is wired to the real pinned devnet vault, not a demo copy. During
 this gate several defects that made the web layer non-functional were found by direct
